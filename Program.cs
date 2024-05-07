@@ -39,8 +39,10 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
-			app.MapGet("ChatAi", async (string query, OpenAIAPI api) =>
+			app.MapGet("ChatAi", async (OpenAIAPI api) =>
 			{
+				string query = "print the name of 2 dishes(seperated with a comma)";
+
 				var chat = api.Chat.CreateConversation();
 
 				//Something went wrong here so its a bit different from how i did it but it still works
@@ -68,7 +70,21 @@ namespace GenerateDishesAPI
 				return url;
 			});
 
+			TwoDishesTwoPictures();
+
 			app.Run();
+		}
+
+		static async void TwoDishesTwoPictures()
+		{
+			ApiClient client = new ApiClient();
+			IDictionary<string, string> kvps = await client.GeneratePicturesAsync();
+
+			foreach (var kv in kvps)
+			{
+				await Console.Out.WriteLineAsync(kv.Key + " " + kv.Value);
+			}
+			
 		}
 	}
 }
