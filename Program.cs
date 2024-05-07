@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OpenAI_API;
 using OpenAI_API.Models;
+using Unsplasharp;
 
 namespace GenerateDishesAPI
 {
@@ -57,7 +58,17 @@ namespace GenerateDishesAPI
 
             });
 
-            app.Run();
+			app.MapGet("/img", async (string imgQuery) =>
+			{
+				UnsplasharpClient client = new UnsplasharpClient("03jvn6lavoGJKCLyVN_Tw1GR654rFZbZbfVqRb6qiCE");
+				var photo = await client.SearchPhotos(imgQuery);
+
+				var url = photo.First().Urls.Regular;
+
+				return url;
+			});
+
+			app.Run();
 		}
 	}
 }
