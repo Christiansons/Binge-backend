@@ -16,6 +16,7 @@
     </PackageReference>
     <PackageReference Include="OpenAI" Version="1.11.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="unsplasharp.api" Version="0.7.0" />
   </ItemGroup>
 
 </Project>
