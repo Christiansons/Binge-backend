@@ -51,7 +51,7 @@ namespace GenerateDishesAPI
 				chat.RequestParameters.Temperature = 0;
 
                 chat.AppendSystemMessage("You are a food recepie database and will give out food recepies");
-
+				//Lägg till appends för json
                 chat.AppendUserInput(query);
 
                 var answer = await chat.GetResponseFromChatbotAsync();

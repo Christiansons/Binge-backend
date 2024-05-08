@@ -3,12 +3,17 @@
 	public class ApiClient
 	{
 		private readonly HttpClient _httpClient;
+		private string url = "https://localhost:7231";
 
 		public ApiClient()
 		{
 			_httpClient = new HttpClient();
 		}
 
+		//Börja med ingredienser 
+		//Sedan stegen
+
+		//Endpoint åt frontend för ingredienser och 
 		public async Task<string[]> GenerateDishesAsync(string path)
 		{
 			try
@@ -38,8 +43,8 @@
 		public async Task<IDictionary<string,string>> GeneratePicturesAsync()
 		{
 			ApiClient client = new ApiClient();
-			string[] dishes = await client.GenerateDishesAsync("https://localhost:7231/ChatAi");
-			string path = "https://localhost:7231/img";
+			string[] dishes = await client.GenerateDishesAsync(url + "/ChatAi");
+			string path = url + "/img";
 
 			IDictionary<string,string> kvp = new Dictionary<string,string>();
 
