@@ -1,4 +1,6 @@
-﻿namespace GenerateDishesAPI
+﻿using GenerateDishesAPI.Models.KvpModel;
+
+namespace GenerateDishesAPI
 {
 	public class ApiClient
 	{
@@ -40,14 +42,15 @@
 			}
 		}
 
-		public async Task<IDictionary<string,string>> GeneratePicturesAndDishesAsync()
+		public async Task<List<valuePair>> GeneratePicturesAndDishesAsync()
 		{
 			ApiClient client = new ApiClient();
+			List<valuePair> kvps = new List< valuePair>();
 			string[] dishes = await client.GenerateDishesAsync($"https://localhost:7231/ChatAi");
 			string path = ($"https://localhost:7231/img");
 
-			IDictionary<string,string> kvp = new Dictionary<string,string>();
-
+			valuePair kvp = new valuePair();
+			int counter = 1;
 			foreach (string dish in dishes)
 			{
 				//Make GET request to Picture-API
@@ -56,11 +59,16 @@
 				HttpResponseMessage response = await _httpClient.GetAsync(requestUrl);
 
 				string url = await response.Content.ReadAsStringAsync();
-
-				kvp.Add(dish, url);
+				kvp = new valuePair()
+				{
+					Id = counter++,
+					Key = dish,
+					Value = url
+				};
+				kvps.Add(kvp);
 			}
 
-			return kvp;
+			return kvps;
 		}
 
 
