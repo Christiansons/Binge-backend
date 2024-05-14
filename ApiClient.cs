@@ -40,11 +40,11 @@
 			}
 		}
 
-		public async Task<IDictionary<string,string>> GeneratePicturesAsync()
+		public async Task<IDictionary<string,string>> GeneratePicturesAndDishesAsync()
 		{
 			ApiClient client = new ApiClient();
-			string[] dishes = await client.GenerateDishesAsync(url + "/ChatAi");
-			string path = url + "/img";
+			string[] dishes = await client.GenerateDishesAsync($"https://localhost:7231/ChatAi");
+			string path = ($"https://localhost:7231/img");
 
 			IDictionary<string,string> kvp = new Dictionary<string,string>();
 
@@ -55,9 +55,9 @@
 
 				HttpResponseMessage response = await _httpClient.GetAsync(requestUrl);
 
-				string responseBody = await response.Content.ReadAsStringAsync();
+				string url = await response.Content.ReadAsStringAsync();
 
-				kvp.Add(dish, responseBody);
+				kvp.Add(dish, url);
 			}
 
 			return kvp;

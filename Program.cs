@@ -18,6 +18,7 @@ namespace GenerateDishesAPI
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
+			builder.Services.AddSingleton(new ApiClient());
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -41,20 +42,21 @@ namespace GenerateDishesAPI
 
 			app.MapGet("ChatAi", async (OpenAIAPI api) =>
 			{
-				string query = "print the name of 2 dishes(seperated with a comma)";
+				string query = "print the name of 10 different dishes(seperated with a comma)";
 
 				var chat = api.Chat.CreateConversation();
 
 				//Something went wrong here so its a bit different from how i did it but it still works
 				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
 
-				chat.RequestParameters.Temperature = 0;
+				chat.RequestParameters.Temperature = 1;
 
                 chat.AppendSystemMessage("You are a food recepie database and will give out food recepies");
 				//Lägg till appends för json
                 chat.AppendUserInput(query);
-
-                var answer = await chat.GetResponseFromChatbotAsync();
+				chat.AppendExampleChatbotOutput("Beef wellington, Homemade pizza, Spaghetti carbonara, Birria tacos, Meatloaf, Fried chicken sandwich, Pulled pork, Escargot, Sushi, Mango sticky rice");
+				chat.AppendUserInput(query);
+				var answer = await chat.GetResponseFromChatbotAsync();
 
                 return answer;
 
@@ -70,21 +72,32 @@ namespace GenerateDishesAPI
 				return url;
 			});
 
-			TwoDishesTwoPictures();
+			app.MapGet("/PicturesAndUrls", async (ApiClient client) =>
+			{
+				return await client.GeneratePicturesAndDishesAsync();
+			});
+
+			app.MapPost("GenerateRecipe", (string dish) =>
+			{
+
+			});
+			//TwoDishesTwoPictures();
 
 			app.Run();
 		}
 
-		static async void TwoDishesTwoPictures()
-		{
-			ApiClient client = new ApiClient();
-			IDictionary<string, string> kvps = await client.GeneratePicturesAsync();
+		//static async void TwoDishesTwoPictures()
+		//{
+		//	ApiClient client = new ApiClient();
+		//	IDictionary<string, string> kvps = await client.GeneratePicturesAsync();
 
-			foreach (var kv in kvps)
-			{
-				await Console.Out.WriteLineAsync(kv.Key + " " + kv.Value);
-			}
+		//	foreach (var kv in kvps)
+		//	{
+		//		await Console.Out.WriteLineAsync(kv.Key + " " + kv.Value);
+		//	}
 			
-		}
+		//}
+
+		//Namn email, id, lösen
 	}
 }
