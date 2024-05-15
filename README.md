@@ -14,3 +14,5 @@ Microsoft.EntityFrameworkCore.Tools
 OpenAI
 
 Swashbuckle.AspNetCore
+
+Microsoft.EntityFrameworkCore.SqlServer
