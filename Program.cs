@@ -1,5 +1,8 @@
 
+using GenerateDishesAPI.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
 using OpenAI_API;
 using OpenAI_API.Models;
 using Unsplasharp;
@@ -19,6 +22,9 @@ namespace GenerateDishesAPI
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
 			builder.Services.AddSingleton(new ApiClient());
+            builder.Services.AddDbContext<ApplicationContext>(options =>
+			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
+
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
