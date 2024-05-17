@@ -40,9 +40,9 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
-			app.MapGet("ChatAi", async (OpenAIAPI api) =>
+			app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
 			{
-				string query = "print the name of 10 different dishes(seperated with a comma)";
+				string query = $"print the name of 10 different dishes(seperated with a comma)"; /*, adjust for: {preferences}*/
 
 				var chat = api.Chat.CreateConversation();
 
@@ -77,26 +77,40 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
-			app.MapPost("GenerateRecipe", async (OpenAIAPI api, string dish) =>
+			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
 			{
-				string query = $"print the ingredients and cooking instructions for dish: {dish}";
+				string query = $"print the ingredients for dish: {dish}, adjust for {numOfPeople} people";
 
 				var chat = api.Chat.CreateConversation();
-
-				//Something went wrong here so its a bit different from how i did it but it still works
 				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
-
 				chat.RequestParameters.Temperature = 1;
 
-				chat.AppendSystemMessage("You are a food recepie database and will give out food recepies");
+				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
 				//Lägg till appends för json
+				chat.AppendUserInput($"print the ingredients for dish: spaghetti carbonara, adjust for 4 people");
+				chat.AppendExampleChatbotOutput(@"[{""ingredient"": ""400g pasta""}, {""ingredient"": ""4 eggs""}, {""ingredient"": ""30g pecorino cheese""},{""ingredient"": ""200g pancetta""},{""ingredient"": ""30g parmesan cheese""},{""ingredient"": ""salt""},{""ingredient"": ""pepper""}]");
 				chat.AppendUserInput(query);
-				chat.AppendExampleChatbotOutput("Beef wellington, Homemade pizza, Spaghetti carbonara, Birria tacos, Meatloaf, Fried chicken sandwich, Pulled pork, Escargot, Sushi, Mango sticky rice");
+				var answer = await chat.GetResponseFromChatbotAsync();
+				//lägg till
+				return answer;
+			});
+
+			app.MapPost("GenerateInstructions", async (OpenAIAPI api, string ingredients, string dish) =>
+			{
+				string query = $"generate cooking instructions for dish: {dish} with the ingredients: {ingredients}";
+
+				var chat = api.Chat.CreateConversation();
+				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
+				chat.RequestParameters.Temperature = 1;
+
+				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
+				//Lägg till appends för json
 				chat.AppendUserInput(query);
 				var answer = await chat.GetResponseFromChatbotAsync();
 
 				return answer;
 			});
+
 
 			app.Run();
 		}

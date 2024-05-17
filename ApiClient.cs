@@ -1,8 +1,8 @@
-﻿using GenerateDishesAPI.Models.KvpModel;
+﻿using GenerateDishesAPI.Models.DTOs;
 
 namespace GenerateDishesAPI
 {
-	public class ApiClient
+    public class ApiClient
 	{
 		private readonly HttpClient _httpClient;
 		private readonly string _url = "https://localhost:7231";
