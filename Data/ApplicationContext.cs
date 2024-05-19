@@ -12,6 +12,9 @@ namespace GenerateDishesAPI.Data
 
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options) { }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseSqlServer("Data Source=(LocalDb)\\MSSQLLocalDB;Initial Catalog=BingeDb;Integrated Security=True");
+
         public ApplicationContext()
         {
         }
