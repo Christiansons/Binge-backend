@@ -46,7 +46,35 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
-			app.MapGet("ChatAi", async (OpenAIAPI api) =>
+            using (var context = new ApplicationContext())
+            {
+                bool loginCheck = false;
+                do
+                {
+                    var Users = context.Users.ToList();
+                    Console.WriteLine("Enter your email:");
+                    string userEmail = Console.ReadLine();
+                    Console.WriteLine("Enter your password:");
+                    string userPassword = Console.ReadLine();
+                    Console.Clear();
+
+                    var MatchingUser = Users.Select(x => x).Where(x => x.Email == userEmail && x.Password == userPassword).ToList();
+                    if (MatchingUser.Count == 0)
+                    {
+                        Console.WriteLine("Incorrect email or password");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Logged in succesfully");
+                        loginCheck = true;
+                    }
+
+
+                } while (loginCheck == false);
+
+            }
+
+            app.MapGet("ChatAi", async (OpenAIAPI api) =>
 			{
 				string query = "print the name of 10 different dishes(seperated with a comma)";
 
