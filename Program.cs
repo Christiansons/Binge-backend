@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using OpenAI_API;
 using OpenAI_API.Models;
+using GenerateDishesAPI.Repositories;
 using Unsplasharp;
+using Microsoft.Identity.Client;
 
 namespace GenerateDishesAPI
 {
@@ -46,33 +48,9 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
-            using (var context = new ApplicationContext())
-            {
-                bool loginCheck = false;
-                do
-                {
-                    var Users = context.Users.ToList();
-                    Console.WriteLine("Enter your email:");
-                    string userEmail = Console.ReadLine();
-                    Console.WriteLine("Enter your password:");
-                    string userPassword = Console.ReadLine();
-                    Console.Clear();
-
-                    var MatchingUser = Users.Select(x => x).Where(x => x.Email == userEmail && x.Password == userPassword).ToList();
-                    if (MatchingUser.Count == 0)
-                    {
-                        Console.WriteLine("Incorrect email or password");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Logged in succesfully");
-                        loginCheck = true;
-                    }
-
-
-                } while (loginCheck == false);
-
-            }
+			var LoginChecker = new DbHelpers();
+			bool loginCheckBool = LoginChecker.LoginCheck();
+			LoginChecker.CreateAccount();
 
             app.MapGet("ChatAi", async (OpenAIAPI api) =>
 			{
