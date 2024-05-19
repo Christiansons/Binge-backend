@@ -1,8 +1,13 @@
 
+using GenerateDishesAPI.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
 using OpenAI_API;
 using OpenAI_API.Models;
+using GenerateDishesAPI.Repositories;
 using Unsplasharp;
+using Microsoft.Identity.Client;
 
 namespace GenerateDishesAPI
 {
@@ -19,6 +24,9 @@ namespace GenerateDishesAPI
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
 			builder.Services.AddSingleton(new ApiClient());
+            builder.Services.AddDbContext<ApplicationContext>(options =>
+			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
+
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -40,7 +48,13 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
-			app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
+			
+			var LoginChecker = new DbHelpers();
+			bool loginCheckBool = LoginChecker.LoginCheck();
+			LoginChecker.CreateAccount();
+
+
+      app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
 			{
 				string query = $"print the name of 10 different dishes(seperated with a comma)"; /*, adjust for: {preferences}*/
 
@@ -52,7 +66,7 @@ namespace GenerateDishesAPI
 				chat.RequestParameters.Temperature = 1;
 
                 chat.AppendSystemMessage("You are a food recepie database and will give out food recepies");
-				//Lägg till appends för json
+				//LÃ¤gg till appends fÃ¶r json
                 chat.AppendUserInput(query);
 				chat.AppendExampleChatbotOutput("Beef wellington, Homemade pizza, Spaghetti carbonara, Birria tacos, Meatloaf, Fried chicken sandwich, Pulled pork, Escargot, Sushi, Mango sticky rice");
 				chat.AppendUserInput(query);
@@ -87,12 +101,12 @@ namespace GenerateDishesAPI
 				chat.RequestParameters.Temperature = 1;
 
 				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
-				//Lägg till appends för json
+				//LÃ¤gg till appends fÃ¶r json
 				chat.AppendUserInput($"print the ingredients for dish: spaghetti carbonara, adjust for 4 people");
 				chat.AppendExampleChatbotOutput(@"[{""ingredient"": ""400g pasta""}, {""ingredient"": ""4 eggs""}, {""ingredient"": ""30g pecorino cheese""},{""ingredient"": ""200g pancetta""},{""ingredient"": ""30g parmesan cheese""},{""ingredient"": ""salt""},{""ingredient"": ""pepper""}]");
 				chat.AppendUserInput(query);
 				var answer = await chat.GetResponseFromChatbotAsync();
-				//lägg till
+				//lÃ¤gg till
 				return answer;
 			});
 
@@ -105,7 +119,7 @@ namespace GenerateDishesAPI
 				chat.RequestParameters.Temperature = 1;
 
 				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
-				//Lägg till appends för json
+				//LÃ¤gg till appends fÃ¶r json
 				chat.AppendUserInput(query);
 				var answer = await chat.GetResponseFromChatbotAsync();
 
@@ -116,6 +130,6 @@ namespace GenerateDishesAPI
 			app.Run();
 		}
 
-		//Namn email, id, lösen
+		//Namn email, id, lÃ¶sen
 	}
 }
