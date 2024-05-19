@@ -77,6 +77,7 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
+
 			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
 			{
 				string query = $"print the ingredients for dish: {dish}, adjust for {numOfPeople} people";
