@@ -93,30 +93,28 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
-            app.MapPost("/SaveDish", async (ApplicationContext _context, string dish, int id) =>
-            {
-                try
-                {
-                    var user = await _context.Users.Where(u => u.Id == id).FirstOrDefaultAsync();
-                    if (user == null)
-                    {
-                        return Results.NotFound("User not found");
-                    }
 
-                    user.Dishes.Add(new Dish()
-                    {
-                        DishName = dish,
-                    });
-                    await _context.SaveChangesAsync();
-                    return Results.StatusCode((int)HttpStatusCode.Created);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Problem(ex.Message);
-                }
-            });
+			app.MapPost("/SaveDish", (ApplicationContext _context, string dish, int id) =>
+			{
+				using (_context = new ApplicationContext())
+				{
+					try
+					{
+						User user = context.Users.Where(u => u.Id == id).FirstOrDefault();
+						user.Dishes.Add(new Dish()
+						{
+							DishName = dish,
+						});
+					}
+					catch (Exception ex)
+					{
+						return ex.Message;
+					}
+					return HttpStatusCode.Created;
+				}
+			});
 
-            app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
+			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
 			{
 				string query = $"print the ingredients for dish: {dish}, adjust for {numOfPeople} people";
 
