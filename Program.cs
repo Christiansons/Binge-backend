@@ -11,6 +11,8 @@ using Microsoft.Identity.Client;
 using GenerateDishesAPI.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
+using Newtonsoft.Json;
+using System.Linq;
 
 namespace GenerateDishesAPI
 {
@@ -51,9 +53,9 @@ namespace GenerateDishesAPI
 			app.MapControllers();
 
 			
-			var LoginChecker = new DbHelpers();
-			bool loginCheckBool = LoginChecker.LoginCheck();
-			LoginChecker.CreateAccount();
+			//var LoginChecker = new DbHelpers();
+			//bool loginCheckBool = LoginChecker.LoginCheck();
+			//LoginChecker.CreateAccount();
 
 
       app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
@@ -93,36 +95,52 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
-
-			app.MapPost("/SaveDish", async(ApplicationContext _context, string dish, int id) =>
+			//Save dish to user
+			app.MapPost("/SaveDishAndUrl", (string dishName, int id) =>
 			{
 				try
-				{
-					var user = await _context.Users.Where(u => u.Id == id).FirstOrDefaultAsync();
-					if (user == null)
+				{	
+					using(ApplicationContext _context = new ApplicationContext())
 					{
-						return Results.Problem("User not found");
+						User user = _context.Users.Where(u => u.Id == id).FirstOrDefault();
+						if (user == null)
+						{
+							return Results.Problem("User not found");
+						}
+
+						Dish dish = new Dish()
+						{
+							DishName = dishName
+						};
+
+						if(user.Dishes == null)
+						{
+							user.Dishes = new List<Dish>() { dish };
+						}
+						_context.SaveChanges();
+
+						return Results.StatusCode((int)HttpStatusCode.Created);
 					}
-
-					user.Dishes.Add(new Dish()
-					{
-						DishName = dish,
-					});
-
-					await _context.SaveChangesAsync();
-
-					return Results.StatusCode((int)HttpStatusCode.Created);
 				}
 				catch (Exception ex)
 					
 					{
-						return Results.Problem(ex.Message);
+						return Results.BadRequest(ex.Message);
 					}
 			});
 
-			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
+
+			//Endpoint: Remove dish from user
+
+			//endpoint Login
+
+			//endpoint Register
+
+			//endpoint Show all dishes and pictures
+
+			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dishName, int numOfPeople, int id) =>
 			{
-				string query = $"print the ingredients for dish: {dish}, adjust for {numOfPeople} people";
+				string query = $"print the ingredients for dish: {dishName}, adjust for {numOfPeople} people";
 
 				var chat = api.Chat.CreateConversation();
 				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
@@ -134,8 +152,29 @@ namespace GenerateDishesAPI
 				chat.AppendExampleChatbotOutput(@"[{""ingredient"": ""400g pasta""}, {""ingredient"": ""4 eggs""}, {""ingredient"": ""30g pecorino cheese""},{""ingredient"": ""200g pancetta""},{""ingredient"": ""30g parmesan cheese""},{""ingredient"": ""salt""},{""ingredient"": ""pepper""}]");
 				chat.AppendUserInput(query);
 				var answer = await chat.GetResponseFromChatbotAsync();
-				//lägg till
-				return answer;
+				
+				dynamic ingredients = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(answer));
+
+				using (var context = new ApplicationContext())
+				{
+					User user = context.Users.Where(u => u.Id == id).FirstOrDefault();
+
+
+					Dish savedDish = context.Dishes
+					.Where(d => d.DishName == dishName)
+					.FirstOrDefault();
+					
+					foreach (var Ingredient in ingredients)
+					{
+						savedDish.ingredients.Add(new Ingredient()
+						{
+							IngredientName = Ingredient.ingredient
+						});
+					}
+					context.SaveChanges();
+				}
+
+				return ingredients;
 			});
 
 			app.MapPost("GenerateInstructions", async (OpenAIAPI api, string ingredients, string dish) =>
@@ -153,6 +192,15 @@ namespace GenerateDishesAPI
 
 				return answer;
 			});
+
+			//endpoint Save complete dish
+
+			//endpoint Return complete dish
+
+			//endpoint if serving size changes, remove recipe from database, call Save and return dish with new number
+
+			//
+
 
 
 			app.Run();
