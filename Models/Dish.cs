@@ -6,7 +6,7 @@
 		public string DishName { get; set; }
 
 		public virtual ICollection<Ingredient>? ingredients { get; set; }
-		public virtual Recipe Recipe { get; set; }
+		public virtual Recipe? Recipe { get; set; }
 
 
 	}

@@ -8,6 +8,9 @@ using OpenAI_API.Models;
 using GenerateDishesAPI.Repositories;
 using Unsplasharp;
 using Microsoft.Identity.Client;
+using GenerateDishesAPI.Models;
+using Microsoft.AspNetCore.Http.HttpResults;
+using System.Net;
 
 namespace GenerateDishesAPI
 {
@@ -26,7 +29,6 @@ namespace GenerateDishesAPI
 			builder.Services.AddSingleton(new ApiClient());
             builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
-
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -91,6 +93,26 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
+
+			app.MapPost("/SaveDish", (ApplicationContext _context, string dish, int id) =>
+			{
+				using (_context = new ApplicationContext())
+				{
+					try
+					{
+						User user = context.Users.Where(u => u.Id == id).FirstOrDefault();
+						user.Dishes.Add(new Dish()
+						{
+							DishName = dish,
+						});
+					}
+					catch (Exception ex)
+					{
+						return ex.Message;
+					}
+					return HttpStatusCode.Created;
+				}
+			});
 
 			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
 			{
