@@ -91,6 +91,24 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
+			//Save dish to user
+			app.MapPost("/SaveDishAndUrl", (string dishName, int id) =>
+			{
+				//if bearertoken -> 
+				try
+				{	
+					using(ApplicationContext _context = new ApplicationContext())
+					{
+						User user = _context.Users.Where(u => u.Id == id).FirstOrDefault();
+						if (user == null)
+						{
+							return Results.Problem("User not found");
+						}
+
+						Dish dish = new Dish()
+						{
+							DishName = dishName
+						};
 
 			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dish, int numOfPeople) =>
 			{
@@ -100,13 +118,31 @@ namespace GenerateDishesAPI
 				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
 				chat.RequestParameters.Temperature = 1;
 
-				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
+				chat.AppendSystemMessage("You are a food ingredient database and will give out dish ingredients (seperated with a comma)");
 				//Lägg till appends för json
 				chat.AppendUserInput($"print the ingredients for dish: spaghetti carbonara, adjust for 4 people");
-				chat.AppendExampleChatbotOutput(@"[{""ingredient"": ""400g pasta""}, {""ingredient"": ""4 eggs""}, {""ingredient"": ""30g pecorino cheese""},{""ingredient"": ""200g pancetta""},{""ingredient"": ""30g parmesan cheese""},{""ingredient"": ""salt""},{""ingredient"": ""pepper""}]");
+				chat.AppendExampleChatbotOutput("400g pasta, 4 eggs, 30g pecorino cheese, 200g pancetta, 30g parmesan cheese, salt, pepper");
 				chat.AppendUserInput(query);
 				var answer = await chat.GetResponseFromChatbotAsync();
-				//lägg till
+
+				string[] ingredients = answer.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+				using (var context = new ApplicationContext())
+				{
+					Dish? savedDish = context.Dishes
+					.Where(d => d.DishName == dishName)
+					.FirstOrDefault();
+
+					foreach (var Ingredient in ingredients)
+					{
+						savedDish.ingredients.Add(new Ingredient()
+						{
+							IngredientName = Ingredient
+						});
+					}
+					context.SaveChanges();
+				}
+
 				return answer;
 			});
 
