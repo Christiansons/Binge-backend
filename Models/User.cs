@@ -1,13 +1,9 @@
-﻿namespace GenerateDishesAPI.Models
-{
-	public class User
-	{
-		public int Id { get; set; }
-		public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
+﻿using Microsoft.AspNetCore.Identity;
 
-        public ICollection<Dish>? Dishes { get; set; }
+namespace GenerateDishesAPI.Models
+{
+	public class User : IdentityUser
+	{
+        public ICollection<Dish>? Dishes { get; set; } = new List<Dish>();
 	}
 }

@@ -6,6 +6,6 @@
 		public string IngredientName { get; set; }
 
 		public int DishId { get; set; }
-		public virtual Dish dish { get; set; }
+		public virtual Dish dish { get; set; } = null!;
 	}
 }
