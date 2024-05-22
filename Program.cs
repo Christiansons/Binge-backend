@@ -1,18 +1,12 @@
 
 using GenerateDishesAPI.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Configuration;
 using OpenAI_API;
-using OpenAI_API.Models;
-using GenerateDishesAPI.Repositories;
 using Unsplasharp;
-using Microsoft.Identity.Client;
 using GenerateDishesAPI.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 using System.Net;
 using Newtonsoft.Json;
-using System.Linq;
+using Microsoft.AspNetCore.Identity;
 
 namespace GenerateDishesAPI
 {
@@ -23,8 +17,9 @@ namespace GenerateDishesAPI
 			var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddAuthorization();
+            
             DotNetEnv.Env.Load();
+			
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
@@ -32,8 +27,66 @@ namespace GenerateDishesAPI
             builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
+			//Identity stuff
+
+
+			//builder.Services.AddIdentity<User, IdentityRole>(options => { } )
+			//	.AddEntityFrameworkStores<ApplicationContext>()
+			//	.AddUserManager<UserManager<User>>()
+			//	.AddApiEndpoints();
+
+			//builder.Services.AddIdentityCore<User>()
+			//	.AddEntityFrameworkStores<ApplicationContext>()
+			//	.AddUserManager<UserManager<User>>()
+			//	.AddApiEndpoints();
+
+			builder.Services.AddIdentity<User, IdentityRole>(options =>
+			{
+				options.User.RequireUniqueEmail = true;
+			})
+				.AddEntityFrameworkStores<ApplicationContext>() // ersätt "ApplicationDbContext" så den pekar mot ditt eget context-fil
+				.AddUserManager<UserManager<User>>()
+				.AddRoleManager<RoleManager<IdentityRole>>()
+				.AddApiEndpoints()
+				.AddDefaultTokenProviders();
+
+			builder.Services.AddAuthentication();/*.AddCookie(IdentityConstants.ApplicationScheme);*/
+			builder.Services.AddAuthorization();
+
+
+
+			builder.Services.Configure<IdentityOptions>(options =>
+			{
+				// Password settings.
+				options.Password.RequireDigit = true;
+				options.Password.RequireLowercase = true;
+				options.Password.RequireNonAlphanumeric = true;
+				options.Password.RequireUppercase = true;
+				options.Password.RequiredLength = 6;
+				options.Password.RequiredUniqueChars = 1;
+
+				// User settings.
+				options.User.AllowedUserNameCharacters =
+				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+				options.User.RequireUniqueEmail = false;
+			});
+
+			//builder.Services.ConfigureApplicationCookie(options =>
+			//{
+			//	// Cookie settings
+			//	options.Cookie.HttpOnly = true;
+			//	options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+
+			//	options.LoginPath = "/Identity/Account/Login";
+			//	options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+			//	options.SlidingExpiration = true;
+			//});
+			//Identity stuff
+
+
+
+			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
 			var app = builder.Build();
@@ -52,13 +105,36 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
-			
+
 			//var LoginChecker = new DbHelpers();
 			//bool loginCheckBool = LoginChecker.LoginCheck();
 			//LoginChecker.CreateAccount();
 
+			app.MapPost("/register", async (UserManager<User> userManager, string email, string userName, string password) =>
+			{
+				var newUser = new User
+				{
+					Email = email,
+					UserName = userName
+				};
 
-      app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
+				await userManager.CreateAsync(newUser, password);
+				await userManager.
+
+				return newUser;
+			});
+
+			app.MapGet("/login", async (UserManager<User> userManager, string email, string password) =>
+			{
+				var result = await userManager.FindByEmailAsync(email);
+				result.
+				//Check password
+				//var result = Sign-in
+				//Return result
+
+			});
+
+			app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
 			{
 				string query = $"print the name of 10 different dishes(seperated with a comma)"; /*, adjust for: {preferences}*/
 
@@ -96,7 +172,7 @@ namespace GenerateDishesAPI
 			});
 
 			//Save dish to user
-			app.MapPost("/SaveDishAndUrl", (string dishName, int id) =>
+			app.MapPost("/SaveDishAndUrl", (string dishName, string id) =>
 			{
 				try
 				{	
@@ -129,16 +205,26 @@ namespace GenerateDishesAPI
 					}
 			});
 
-
+			//GET id
 			//Endpoint: Remove dish from user
 
 			//endpoint Login
+
+			//app.MapPost("/identity/login", async (HttpClient httpClient) =>
+			//{
+			//	var loginResponse = await httpClient.PostAsJsonAsync("/identity/login", new { username, password });
+			//}); 
+			//var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+			//var accessToken = loginContent.GetProperty("access_token").GetString();
+
+			//httpClient.DefaultRequestHeaders.Authorization = new("Bearer", accessToken);
+			//Console.WriteLine(await httpClient.GetStringAsync("/requires-auth"));
 
 			//endpoint Register
 
 			//endpoint Show all dishes and pictures
 
-			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dishName, int numOfPeople, int id) =>
+			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dishName, int numOfPeople, string id) =>
 			{
 				string query = $"print the ingredients for dish: {dishName}, adjust for {numOfPeople} people";
 

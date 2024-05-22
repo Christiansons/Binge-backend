@@ -4,10 +4,9 @@
 	{
 		public int Id { get; set; }
 		public string DishName { get; set; }
-		public int UserId { get; set; }
+
+		public virtual User user { get; set; }
 		public virtual ICollection<Ingredient>? ingredients { get; set; }
 		public virtual Recipe? Recipe { get; set; }
-
-
 	}
 }
