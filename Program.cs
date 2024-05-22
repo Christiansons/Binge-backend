@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Identity;
 using Unsplasharp.Models;
 using GenerateDishesAPI.Repositories;
+using GenerateDishesAPI.Handlers;
 
 namespace GenerateDishesAPI
 {
@@ -25,6 +26,8 @@ namespace GenerateDishesAPI
 			builder.Services.AddSingleton(new ApiClient());
 			builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
 			builder.Services.AddScoped<DbHelpers>();
+			builder.Services.AddScoped<OpenAiHandler>();
+			builder.Services.AddScoped<UnsplashHandler>();
 
 			builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
@@ -120,50 +123,25 @@ namespace GenerateDishesAPI
 
 			//});
 
-			app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
+			app.MapGet("ChatAi", async (OpenAiHandler aiHandler) =>
 			{
-				string query = $"print the name of 10 different dishes(seperated with a comma)"; /*, adjust for: {preferences}*/
-
-				var chat = api.Chat.CreateConversation();
-
-				//Something went wrong here so its a bit different from how i did it but it still works
-				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
-
-				chat.RequestParameters.Temperature = 1;
-
-                chat.AppendSystemMessage("You are a food recepie database and will give out food recepies");
-				//Lägg till appends för json
-                chat.AppendUserInput(query);
-				chat.AppendExampleChatbotOutput("Beef wellington, Homemade pizza, Spaghetti carbonara, Birria tacos, Meatloaf, Fried chicken sandwich, Pulled pork, Escargot, Sushi, Mango sticky rice");
-				chat.AppendUserInput(query);
-				var answer = await chat.GetResponseFromChatbotAsync();
-
-                return answer;
-
+				return await aiHandler.GenerateDishesAsync();
             });	
 
-			app.MapGet("/img", async (string imgQuery) =>
+			app.MapGet("/img", async (UnsplashHandler unsplashHandler, string imgQuery) =>
 			{
-				UnsplasharpClient client = new UnsplasharpClient("03jvn6lavoGJKCLyVN_Tw1GR654rFZbZbfVqRb6qiCE");
-				var photo = await client.SearchPhotos(imgQuery);
-
-				var url = photo.First().Urls.Regular;
-
-				return url;
+				return await unsplashHandler.GeneratePictureUrlAsync(imgQuery);
 			});
 
 			app.MapGet("/PicturesAndUrls", async (ApiClient client) =>
 			{
 				return await client.GeneratePicturesAndDishesAsync();
 			});
-
 			
 			app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string id) =>
 			{
 				return dbHelper.SaveDishAndUrl(dishName, url, id);
 			});
-
-			
 
 			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dishName, int numOfPeople, string id) =>
 			{
