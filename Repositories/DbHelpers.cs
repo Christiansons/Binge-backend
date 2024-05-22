@@ -1,66 +1,55 @@
 ﻿using GenerateDishesAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using GenerateDishesAPI.Models;
+using System.Net;
 
 namespace GenerateDishesAPI.Repositories
 {
     public class DbHelpers
     {
-        //public bool LoginCheck() 
-        //{
-        //    using (var context = new ApplicationContext())
-        //    {
-        //        bool loginCheck = false;
+        private readonly ApplicationContext _context;
 
-        //            var Users = context.Users.ToList();
-        //            Console.WriteLine("Enter your email:");
-        //            string userEmail = Console.ReadLine();
-        //            Console.WriteLine("Enter your password:");
-        //            string userPassword = Console.ReadLine();
-        //            Console.Clear();
+		public DbHelpers(ApplicationContext context)
+		{
+			_context = context;
+		}
 
-        //            var MatchingUser = Users.Select(x => x).Where(x => x.Email == userEmail && x.Password == userPassword).ToList();
-        //            if (MatchingUser.Count == 0)
-        //            {
-        //                Console.WriteLine("Incorrect email or password");
-        //                return false;
-        //            }
-        //            else
-        //            {
-        //                Console.WriteLine("Logged in succesfully");
-        //                loginCheck = true;
-        //                return loginCheck;
-        //            }
+        public IResult SaveDishAndUrl(string dishName, string url, string id)
+        {
+			using (_context)
+			{
+				ApplicationUser? user = _context.Users.Where(u => u.Id == id).FirstOrDefault();
+				if (user == null)
+				{
+					return Results.Problem("User not found");
+				}
 
-        //    }
-        //}
+				try
+				{
+					user.Dishes.Add(new Dish
+					{
+						DishName = dishName,
+						
+					});
+				} catch
+				{
+					return Results.Problem("Could not add dish");
+				}
 
-        //public void CreateAccount()
-        //{
-            
-        //    using(var context = new ApplicationContext())
-        //    {
-        //        Console.WriteLine("Create new account");
-        //        Console.WriteLine("Firstname:");
-        //        string firstname = Console.ReadLine();
-        //        Console.WriteLine("Lastname:");
-        //        string lastname = Console.ReadLine();
-        //        Console.WriteLine("Email:");
-        //        string email = Console.ReadLine();
-        //        Console.WriteLine("Password:");
-        //        string password = Console.ReadLine();
-        //        Console.Clear();
 
-        //        var createdUser = new User();
-        //        createdUser.FirstName = firstname;
-        //        createdUser.LastName = lastname;
-        //        createdUser.Email = email;
-        //        createdUser.Password = password;
+				try
+				{
+					_context.SaveChanges();
+					return Results.StatusCode((int)HttpStatusCode.Created);
+				}
+				catch(Exception ex)
+				{
+					return Results.Problem($"Failed to save {ex.Message}");
+				}
 
-        //        context.Add(createdUser);
-        //        context.SaveChanges();
-        //        Console.WriteLine($"User Added {firstname} {lastname} Email: {email} Password: {password}");
-        //    } 
-        //}
+				
+			}
+		}
+
     }
 }

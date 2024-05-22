@@ -7,6 +7,8 @@ using GenerateDishesAPI.Models;
 using System.Net;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Identity;
+using Unsplasharp.Models;
+using GenerateDishesAPI.Repositories;
 
 namespace GenerateDishesAPI
 {
@@ -15,62 +17,56 @@ namespace GenerateDishesAPI
 		public static void Main(string[] args)
 		{
 			var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
             
             DotNetEnv.Env.Load();
-			
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
 			builder.Services.AddSingleton(new ApiClient());
-            builder.Services.AddDbContext<ApplicationContext>(options =>
+			builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
+			builder.Services.AddScoped<DbHelpers>();
+
+			builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
 
 			//Identity stuff
-
-
-			//builder.Services.AddIdentity<User, IdentityRole>(options => { } )
-			//	.AddEntityFrameworkStores<ApplicationContext>()
-			//	.AddUserManager<UserManager<User>>()
-			//	.AddApiEndpoints();
-
-			//builder.Services.AddIdentityCore<User>()
-			//	.AddEntityFrameworkStores<ApplicationContext>()
-			//	.AddUserManager<UserManager<User>>()
-			//	.AddApiEndpoints();
-
-			builder.Services.AddIdentity<User, IdentityRole>(options =>
-			{
-				options.User.RequireUniqueEmail = true;
-			})
-				.AddEntityFrameworkStores<ApplicationContext>() // ersätt "ApplicationDbContext" så den pekar mot ditt eget context-fil
-				.AddUserManager<UserManager<User>>()
-				.AddRoleManager<RoleManager<IdentityRole>>()
-				.AddApiEndpoints()
-				.AddDefaultTokenProviders();
-
-			builder.Services.AddAuthentication();/*.AddCookie(IdentityConstants.ApplicationScheme);*/
+			
+			builder.Services.AddAuthentication();
 			builder.Services.AddAuthorization();
 
+			builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+				.AddEntityFrameworkStores<ApplicationContext>()
+				.AddUserManager<UserManager<ApplicationUser>>();
 
+			//ALDORS LÖSNING
+			//builder.Services.AddIdentity<User, IdentityRole>(options =>
+			//{
+			//	options.User.RequireUniqueEmail = true;
+			//})
+			//	.AddEntityFrameworkStores<ApplicationContext>() // ersätt "ApplicationDbContext" så den pekar mot ditt eget context-fil
+			//	.AddUserManager<UserManager<User>>()
+			//	.AddRoleManager<RoleManager<IdentityRole>>()
+			//	.AddApiEndpoints()
+			//	.AddDefaultTokenProviders();
 
-			builder.Services.Configure<IdentityOptions>(options =>
-			{
-				// Password settings.
-				options.Password.RequireDigit = true;
-				options.Password.RequireLowercase = true;
-				options.Password.RequireNonAlphanumeric = true;
-				options.Password.RequireUppercase = true;
-				options.Password.RequiredLength = 6;
-				options.Password.RequiredUniqueChars = 1;
+			//CONFIGURE OPTIONS
+			//builder.Services.Configure<IdentityOptions>(options =>
+			//{
+			//	// Password settings.
+			//	options.Password.RequireDigit = true;
+			//	options.Password.RequireLowercase = true;
+			//	options.Password.RequireNonAlphanumeric = true;
+			//	options.Password.RequireUppercase = true;
+			//	options.Password.RequiredLength = 6;
+			//	options.Password.RequiredUniqueChars = 1;
 
-				// User settings.
-				options.User.AllowedUserNameCharacters =
-				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-				options.User.RequireUniqueEmail = false;
-			});
+			//	// User settings.
+			//	options.User.AllowedUserNameCharacters =
+			//	"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+			//	options.User.RequireUniqueEmail = false;
+			//});
 
+			//COOKIES
 			//builder.Services.ConfigureApplicationCookie(options =>
 			//{
 			//	// Cookie settings
@@ -81,11 +77,7 @@ namespace GenerateDishesAPI
 			//	options.AccessDeniedPath = "/Identity/Account/AccessDenied";
 			//	options.SlidingExpiration = true;
 			//});
-			//Identity stuff
 
-
-
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
@@ -102,37 +94,31 @@ namespace GenerateDishesAPI
 
 			app.UseAuthorization();
 
-
 			app.MapControllers();
 
+			app.MapIdentityApi<ApplicationUser>();
 
-			//var LoginChecker = new DbHelpers();
-			//bool loginCheckBool = LoginChecker.LoginCheck();
-			//LoginChecker.CreateAccount();
+			//app.MapPost("/register", async (UserManager<ApplicationUser> userManager, string email, string userName, string password) =>
+			//{
+			//	var newUser = new ApplicationUser
+			//	{
+			//		Email = email,
+			//		UserName = userName
+			//	};
 
-			app.MapPost("/register", async (UserManager<User> userManager, string email, string userName, string password) =>
-			{
-				var newUser = new User
-				{
-					Email = email,
-					UserName = userName
-				};
+			//	await userManager.CreateAsync(newUser, password);
 
-				await userManager.CreateAsync(newUser, password);
-				await userManager.
+			//	return newUser;
+			//});
 
-				return newUser;
-			});
+			//app.MapGet("/login", async (UserManager<ApplicationUser> userManager, string email, string password) =>
+			//{
+			//	var result = await userManager.FindByEmailAsync(email);	
+			//	//Check password
+			//	//var result = Sign-in
+			//	//Return result
 
-			app.MapGet("/login", async (UserManager<User> userManager, string email, string password) =>
-			{
-				var result = await userManager.FindByEmailAsync(email);
-				result.
-				//Check password
-				//var result = Sign-in
-				//Return result
-
-			});
+			//});
 
 			app.MapGet("ChatAi", async (OpenAIAPI api/*, string preferences*/) =>
 			{
@@ -154,7 +140,7 @@ namespace GenerateDishesAPI
 
                 return answer;
 
-            });
+            });	
 
 			app.MapGet("/img", async (string imgQuery) =>
 			{
@@ -171,58 +157,13 @@ namespace GenerateDishesAPI
 				return await client.GeneratePicturesAndDishesAsync();
 			});
 
-			//Save dish to user
-			app.MapPost("/SaveDishAndUrl", (string dishName, string id) =>
+			
+			app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string id) =>
 			{
-				try
-				{	
-					using(ApplicationContext _context = new ApplicationContext())
-					{
-						User user = _context.Users.Where(u => u.Id == id).FirstOrDefault();
-						if (user == null)
-						{
-							return Results.Problem("User not found");
-						}
-
-						Dish dish = new Dish()
-						{
-							DishName = dishName
-						};
-
-						if(user.Dishes == null)
-						{
-							user.Dishes = new List<Dish>() { dish };
-						}
-						_context.SaveChanges();
-
-						return Results.StatusCode((int)HttpStatusCode.Created);
-					}
-				}
-				catch (Exception ex)
-					
-					{
-						return Results.BadRequest(ex.Message);
-					}
+				return dbHelper.SaveDishAndUrl(dishName, url, id);
 			});
 
-			//GET id
-			//Endpoint: Remove dish from user
-
-			//endpoint Login
-
-			//app.MapPost("/identity/login", async (HttpClient httpClient) =>
-			//{
-			//	var loginResponse = await httpClient.PostAsJsonAsync("/identity/login", new { username, password });
-			//}); 
-			//var loginContent = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
-			//var accessToken = loginContent.GetProperty("access_token").GetString();
-
-			//httpClient.DefaultRequestHeaders.Authorization = new("Bearer", accessToken);
-			//Console.WriteLine(await httpClient.GetStringAsync("/requires-auth"));
-
-			//endpoint Register
-
-			//endpoint Show all dishes and pictures
+			
 
 			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dishName, int numOfPeople, string id) =>
 			{
@@ -243,7 +184,7 @@ namespace GenerateDishesAPI
 
 				using (var context = new ApplicationContext())
 				{
-					User user = context.Users.Where(u => u.Id == id).FirstOrDefault();
+					ApplicationUser user = context.Users.Where(u => u.Id == id).FirstOrDefault();
 
 
 					Dish savedDish = context.Dishes
@@ -285,8 +226,12 @@ namespace GenerateDishesAPI
 
 			//endpoint if serving size changes, remove recipe from database, call Save and return dish with new number
 
-			//
+			//GET id
+			//Endpoint: Remove dish from user
 
+			//endpoint Show all dishes and pictures
+
+			//Save dish to user
 
 
 			app.Run();
