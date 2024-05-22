@@ -31,12 +31,10 @@ namespace GenerateDishesAPI.Repositories
 						DishName = dishName,
 						
 					});
-				} catch
+				} catch (Exception ex)
 				{
-					return Results.Problem("Could not add dish");
+					return Results.Problem($"Could not add dish to user {ex.Message}");
 				}
-
-
 				try
 				{
 					_context.SaveChanges();
