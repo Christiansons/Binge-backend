@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Identity;
 using Unsplasharp.Models;
 using GenerateDishesAPI.Repositories;
 using GenerateDishesAPI.Handlers;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace GenerateDishesAPI
 {
@@ -114,14 +116,25 @@ namespace GenerateDishesAPI
 			//	return newUser;
 			//});
 
-			//app.MapGet("/login", async (UserManager<ApplicationUser> userManager, string email, string password) =>
-			//{
-			//	var result = await userManager.FindByEmailAsync(email);	
-			//	//Check password
-			//	//var result = Sign-in
-			//	//Return result
+			app.MapGet("/login", async (UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager, string email, string password) =>
+			{
+				var user = await userManager.FindByEmailAsync(email);
 
-			//});
+				//Check password
+				var passwordCheck = await userManager.CheckPasswordAsync(user, password);
+				if (!passwordCheck)
+				{
+					return "No bueno";
+				}
+
+				// Sign-in
+				var result = await SignInManager.PasswordSignInAsync(user, password, isPersistent: false, false);
+				var token = await userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultProvider, "login");
+				
+				//Return result
+
+				return (user.Id); //Skapa DTO
+			});
 
 			app.MapGet("ChatAi", async (OpenAiHandler aiHandler) =>
 			{
