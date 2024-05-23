@@ -5,7 +5,7 @@ namespace GenerateDishesAPI
     public class ApiClient
 	{
 		private readonly HttpClient _httpClient;
-		private readonly string _url = "https://localhost:7231";
+		private readonly string _url = "https://azurefoodapi.azurewebsites.net";
 
 		public ApiClient()
 		{
