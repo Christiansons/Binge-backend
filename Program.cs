@@ -190,7 +190,7 @@ namespace GenerateDishesAPI
 			//Endpoint if serving size changes, removes old recipe and ingredients and generates new recipe with uppdated serving size
 			app.MapGet("/UpdateDish", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string[]? allergies, string userId) =>
 			{
-				dbHelper.DeleteDishFromDb(dishName, userId);
+				dbHelper.DeleteRecipeFromDb(dishName, userId);
 				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, allergies, userId);
 			});
 

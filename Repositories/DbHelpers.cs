@@ -147,11 +147,40 @@ namespace GenerateDishesAPI.Repositories
 				.Where(d => d.ApplicationUserId == userId)
 				.First();
 
+			if (dish == null)
+			{
+				return Results.NotFound();
+			}
+
 			_context.Dishes.Remove(dish);
+
+			_context.SaveChanges();
+			return Results.Ok();
+		}
+
+		public IResult DeleteRecipeFromDb (string dishName, string userId)
+		{
+			Dish? dish = _context.Dishes
+				.Where(d => d.DishName == dishName)
+				.Where(d => d.ApplicationUserId == userId)
+				.Include(d => d.Recipe)
+				.Include(d => d.ingredients)
+				.First();
+
+			if (dish.Recipe == null)
+			{
+				return Results.NotFound();
+			}
+			_context.Ingredients.RemoveRange(dish.ingredients);
+			_context.Recipes.Remove(dish.Recipe);
+
+
 			_context.SaveChanges();
 			return Results.Ok();
 		}
 		
+		 
+
 		public AllDishesConnectedToUserViewModel GetAllDishesConnectedToUser(string userId)
 		{
 			ApplicationUser? user = _context.Users
