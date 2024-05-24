@@ -95,6 +95,10 @@ namespace GenerateDishesAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("DishName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -102,12 +106,9 @@ namespace GenerateDishesAPI.Migrations
                     b.Property<string>("Url")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("userId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("userId");
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Dishes");
                 });
@@ -294,7 +295,9 @@ namespace GenerateDishesAPI.Migrations
                 {
                     b.HasOne("GenerateDishesAPI.Models.ApplicationUser", "user")
                         .WithMany("Dishes")
-                        .HasForeignKey("userId");
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("user");
                 });
