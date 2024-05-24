@@ -187,10 +187,19 @@ namespace GenerateDishesAPI
 				dbhelper.DeleteDishFromDb(dishName, userId);
 			});
 
-			//endpoint if serving size changes, remove recipe from database, call Save and return dish with new number
+			//Endpoint if serving size changes, removes old recipe and ingredients and generates new recipe with uppdated serving size
+			app.MapPost("/UpdateDish", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string[]? allergies, string userId) =>
+			{
+				dbHelper.DeleteDishFromDb(dishName, userId);
+				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, allergies, userId);
+			});
 
-			//GET id
-			//Endpoint: Remove dish from user
+			//Show all dishes and pictures conneted to user
+			app.MapGet("/AllDishesAndUrlsConnectedToUser", (DbHelpers dbhelper, string userId) =>
+			{
+				return dbhelper.GetAllDishesConnectedToUser(userId);
+			});
+
 
 			//endpoint Show all dishes and pictures
 

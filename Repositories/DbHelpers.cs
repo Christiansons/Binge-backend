@@ -4,6 +4,7 @@ using GenerateDishesAPI.Models;
 using System.Net;
 using Unsplasharp.Models;
 using GenerateDishesAPI.Models.DTOs;
+using GenerateDishesAPI.Models.ViewModels;
 
 namespace GenerateDishesAPI.Repositories
 {
@@ -148,8 +149,26 @@ namespace GenerateDishesAPI.Repositories
 
 			_context.Dishes.Remove(dish);
 			_context.SaveChanges();
-
 			return Results.Ok();
+		}
+		
+		public AllDishesConnectedToUserViewModel GetAllDishesConnectedToUser(string userId)
+		{
+			ApplicationUser? user = _context.Users
+				.Where(u => u.Id == userId)
+				.Include(u => u.Dishes)
+				.FirstOrDefault();
+
+			AllDishesConnectedToUserViewModel dishAndUrlViewModel = new AllDishesConnectedToUserViewModel()
+			{
+				dishViewModels = user.Dishes.Select(d => new DishViewModel
+				{
+					dishName = d.DishName,
+					url = d.Url
+				}).ToList()
+			};
+
+			return dishAndUrlViewModel;
 		}
     }
 }
