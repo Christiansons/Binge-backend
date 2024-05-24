@@ -6,8 +6,9 @@
 		public string DishName { get; set; }
 		public string? Url { get; set; }
 
+		public string ApplicationUserId { get; set; }
 		public virtual ApplicationUser user { get; set; }
-		public virtual ICollection<Ingredient>? ingredients { get; set; }
+		public virtual ICollection<Ingredient>? ingredients { get; set; } = new List<Ingredient>();
 		public virtual Recipe? Recipe { get; set; }
 	}
 }

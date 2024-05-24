@@ -12,6 +12,7 @@ using GenerateDishesAPI.Repositories;
 using GenerateDishesAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
+using GenerateDishesAPI.Models.DTOs;
 
 namespace GenerateDishesAPI
 {
@@ -25,7 +26,7 @@ namespace GenerateDishesAPI
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
-			builder.Services.AddSingleton(new ApiClient());
+			builder.Services.AddScoped < ApiClient>();
 			builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
 			builder.Services.AddScoped<DbHelpers>();
 			builder.Services.AddScoped<OpenAiHandler>();
@@ -147,72 +148,44 @@ namespace GenerateDishesAPI
 
 			app.MapGet("/PicturesAndUrls", async (ApiClient client) =>
 			{
-				return await client.GeneratePicturesAndDishesAsync();
+				return await client.GetPicturesAndDishesAsync();
 			});
 			
-			app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string id) =>
+			app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string userId) =>
 			{
-				return dbHelper.SaveDishAndUrl(dishName, url, id);
+				return dbHelper.SaveDishAndUrl(dishName, url, userId);
 			});
 
-			app.MapPost("GenerateIngredients", async (OpenAIAPI api, string dishName, int numOfPeople, string id) =>
+			app.MapGet("GenerateIngredients/{dishName}/{numOfPeople}", async (OpenAiHandler aiHandler, string dishName, int numOfPeople, string[]? allergies) =>
 			{
-				string query = $"print the ingredients for dish: {dishName}, adjust for {numOfPeople} people";
+				return await aiHandler.GenerateIngredientsAsync(dishName, numOfPeople, allergies);
+			});
 
-				var chat = api.Chat.CreateConversation();
-				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
-				chat.RequestParameters.Temperature = 1;
+			app.MapGet("GenerateInstructions/{dishName}", async (OpenAiHandler aiHandler, string dishName, string[] ingredients) =>
+			{
+				return await aiHandler.GenerateRecipeAsync(dishName, ingredients);
+			});
 
-				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
-				//Lägg till appends för json
-				chat.AppendUserInput($"print the ingredients for dish: spaghetti carbonara, adjust for 4 people");
-				chat.AppendExampleChatbotOutput(@"[{""ingredient"": ""400g pasta""}, {""ingredient"": ""4 eggs""}, {""ingredient"": ""30g pecorino cheese""},{""ingredient"": ""200g pancetta""},{""ingredient"": ""30g parmesan cheese""},{""ingredient"": ""salt""},{""ingredient"": ""pepper""}]");
-				chat.AppendUserInput(query);
-				var answer = await chat.GetResponseFromChatbotAsync();
-				
-				dynamic ingredients = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(answer));
+			app.MapPost("/SparaHelaDishen", async (DbHelpers helper, string userId, string dishName, string[] ingredients, string recipe) =>
+			{
+				helper.SaveIngredientsAndRecipe(userId, dishName, ingredients, recipe);
+			});
 
-				using (var context = new ApplicationContext())
+			app.MapGet("GetIngredientsAndRecipe", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string[]? allergies, string userId) =>
+			{
+				if (dbHelper.CheckIfRecipeAdded(dishName, userId))
 				{
-					ApplicationUser user = context.Users.Where(u => u.Id == id).FirstOrDefault();
-
-
-					Dish savedDish = context.Dishes
-					.Where(d => d.DishName == dishName)
-					.FirstOrDefault();
-					
-					foreach (var Ingredient in ingredients)
-					{
-						savedDish.ingredients.Add(new Ingredient()
-						{
-							IngredientName = Ingredient.ingredient
-						});
-					}
-					context.SaveChanges();
+					CompleteDishDTO dish = dbHelper.GetCompleteDishFromDb(userId, dishName);
+					return dish;
 				}
+				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, allergies, userId);
 
-				return ingredients;
 			});
 
-			app.MapPost("GenerateInstructions", async (OpenAIAPI api, string ingredients, string dish) =>
+			app.MapDelete("/DeleteDish", (DbHelpers dbhelper, string dishName, string userId) =>
 			{
-				string query = $"generate cooking instructions for dish: {dish} with the ingredients: {ingredients}";
-
-				var chat = api.Chat.CreateConversation();
-				chat.Model = OpenAI_API.Models.Model.ChatGPTTurbo;
-				chat.RequestParameters.Temperature = 1;
-
-				chat.AppendSystemMessage("You are a food recipe database and will give out food recepies in JSON-format");
-				//Lägg till appends för json
-				chat.AppendUserInput(query);
-				var answer = await chat.GetResponseFromChatbotAsync();
-
-				return answer;
+				dbhelper.DeleteDishFromDb(dishName, userId);
 			});
-
-			//endpoint Save complete dish
-
-			//endpoint Return complete dish
 
 			//endpoint if serving size changes, remove recipe from database, call Save and return dish with new number
 
