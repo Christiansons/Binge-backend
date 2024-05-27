@@ -199,5 +199,75 @@ namespace GenerateDishesAPI.Repositories
 
 			return dishAndUrlViewModel;
 		}
+
+		public IResult AddAllergiesAndDietsToUser(string userId, string[]? allergies, string[]? diets)
+		{
+			ApplicationUser? user = _context.Users
+				.Where(u => u.Id == userId)
+				.Include (u => u.Diets)
+				.Include (u => u.Allergies)
+				.FirstOrDefault();
+
+			if(user == null)
+			{
+				return Results.NotFound("User was not found");
+			}
+
+			foreach (string diet in diets)
+			{
+				user.Diets.Add(new Diet
+				{
+					DietName = diet,
+				});
+			}
+
+			foreach (string allergy in allergies)
+			{
+				user.Allergies.Add(new Allergy
+				{
+					AllergyName = allergy,
+				});
+			}
+			_context.SaveChanges();
+
+			return Results.Created();
+		}
+
+		public AllergyAndDietViewModel GetAllAllergiesAndDietsConnectedToUser (string userId)
+		{
+			ApplicationUser? user = _context.Users
+				.Where(u => u.Id == userId)
+				.Include(u => u.Diets)
+				.Include(u => u.Allergies)
+				.FirstOrDefault();
+
+			if (user == null)
+			{
+				return null;
+			}
+
+			return new AllergyAndDietViewModel
+			{
+				Diets = user.Diets.Select(d => new DietViewModel
+				{
+					DietName = d.DietName
+				}).ToList(),
+				Allergies = user.Allergies.Select(d => new AllergyViewModel
+				{
+					AllergyName = d.AllergyName
+				}).ToList()
+			};
+		}
+
+		public EmailViewModel GetUserEmail (string userId)
+		{
+			return new EmailViewModel
+			{
+				Email = _context.Users
+				.Where(u => u.Id == userId)
+				.Select(u => u.Email).ToString()
+			};
+				
+		}
     }
 }

@@ -34,9 +34,21 @@ namespace GenerateDishesAPI
 
 			builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
+			
+			//Add cors
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("AllowSpecificOrigin",
+					builder =>
+					{
+						builder.WithOrigins("https://example.com", "yomo", "otmeo") // Replace with your front-end origin
+							   .AllowAnyHeader()
+							   .AllowAnyMethod();
+					});
+			});	
 
 			//Identity stuff
-			
+
 			builder.Services.AddAuthentication();
 			builder.Services.AddAuthorization();
 
@@ -44,16 +56,7 @@ namespace GenerateDishesAPI
 				.AddEntityFrameworkStores<ApplicationContext>()
 				.AddUserManager<UserManager<ApplicationUser>>();
 
-			//ALDORS LÖSNING
-			//builder.Services.AddIdentity<User, IdentityRole>(options =>
-			//{
-			//	options.User.RequireUniqueEmail = true;
-			//})
-			//	.AddEntityFrameworkStores<ApplicationContext>() // ersätt "ApplicationDbContext" så den pekar mot ditt eget context-fil
-			//	.AddUserManager<UserManager<User>>()
-			//	.AddRoleManager<RoleManager<IdentityRole>>()
-			//	.AddApiEndpoints()
-			//	.AddDefaultTokenProviders();
+					
 
 			//CONFIGURE OPTIONS
 			//builder.Services.Configure<IdentityOptions>(options =>
@@ -96,6 +99,10 @@ namespace GenerateDishesAPI
 			
 
 			app.UseHttpsRedirection();
+
+			//Use cors
+			app.UseRouting();
+			app.UseCors("AllowSpecificOrigin");
 
 			app.UseAuthorization();
 
@@ -200,6 +207,20 @@ namespace GenerateDishesAPI
 				return dbhelper.GetAllDishesConnectedToUser(userId);
 			});
 
+			app.MapPost("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, string[] allergies, string[] diets) =>
+			{
+				return dbHelper.AddAllergiesAndDietsToUser(userId, allergies, diets);
+			});
+
+			app.MapGet("GetAllergiesAndDiets", (DbHelpers DbHelpers, string userId) =>
+			{
+				return DbHelpers.GetAllAllergiesAndDietsConnectedToUser(userId);
+			});
+
+			app.MapGet("GetUserEmail", (DbHelpers dbHelper, string userId) =>
+			{
+				return dbHelper.GetUserEmail(userId);
+			});
 
 			//endpoint Show all dishes and pictures
 
