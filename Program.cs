@@ -36,16 +36,16 @@ namespace GenerateDishesAPI
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
 			
 			//Add cors
-			builder.Services.AddCors(options =>
-			{
-				options.AddPolicy("AllowSpecificOrigin",
-					builder =>
-					{
-						builder.WithOrigins("https://example.com", "yomo", "otmeo") // Replace with your front-end origin
-							   .AllowAnyHeader()
-							   .AllowAnyMethod();
-					});
-			});	
+			//builder.Services.AddCors(options =>
+			//{
+			//	options.AddPolicy("AllowSpecificOrigin",
+			//		builder =>
+			//		{
+			//			builder.WithOrigins("https://example.com", "yomo", "otmeo") // Replace with your front-end origin
+			//				   .AllowAnyHeader()
+			//				   .AllowAnyMethod();
+			//		});
+			//});	
 
 			//Identity stuff
 
@@ -101,8 +101,8 @@ namespace GenerateDishesAPI
 			app.UseHttpsRedirection();
 
 			//Use cors
-			app.UseRouting();
-			app.UseCors("AllowSpecificOrigin");
+			//app.UseRouting();
+			//app.UseCors("AllowSpecificOrigin");
 
 			app.UseAuthorization();
 
