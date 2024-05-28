@@ -81,32 +81,12 @@ namespace GenerateDishesAPI
 			return dtos;
 		}
 
-		public async Task<string[]> GetIngredientsAsync(string dishName, int numOfPeople, string[]? allergies)
+		public async Task<string[]> GetIngredientsAsync(string dishName, int numOfPeople, string userId)
 		{
-			string baseUrl = $"{_url}/GenerateIngredients/{dishName}/{numOfPeople}";
-
-			// Using UriBuilder to construct the full URL with query parameters
-			var uriBuilder = new UriBuilder(baseUrl);
-			var query = HttpUtility.ParseQueryString(uriBuilder.Query);
-
-			// Adding allergies as query parameters
-			if (allergies.Length < 1 || allergies == null)
-			{
-				allergies = new string[]
-				{
-					"none"
-				};
-			}
-			foreach (var allergy in allergies)
-			{
-				query["allergies"] = allergy;
-			}
-
-			uriBuilder.Query = query.ToString();
-			string finalUrl = uriBuilder.ToString();
+			string baseUrl = $"{_url}/GenerateIngredients/{dishName}/{numOfPeople}/{userId}";
 
 			// Make a GET request to the API endpoint
-			HttpResponseMessage response = await _httpClient.GetAsync(finalUrl);
+			HttpResponseMessage response = await _httpClient.GetAsync(baseUrl);
 
 			// Check if the request was successful
 			response.EnsureSuccessStatusCode();
@@ -121,11 +101,11 @@ namespace GenerateDishesAPI
 			return ingredients;
 		}
 
-		public async Task<CompleteDishDTO> GetIngredientsAndRecipeAsync(string dishName, int numOfPeople, string[]? allergies, string userId)
+		public async Task<CompleteDishDTO> GetIngredientsAndRecipeAsync(string dishName, int numOfPeople, string userId)
 		{
 
 			//Calls GetIngredientsAsync to get the ingredients
-			string[] ingredients = await GetIngredientsAsync(dishName, numOfPeople, allergies);
+			string[] ingredients = await GetIngredientsAsync(dishName, numOfPeople, userId);
 
 			string baseUrl = $"{_url}/GenerateInstructions/{dishName}";
 			var uriBuilder = new UriBuilder(baseUrl);

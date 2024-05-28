@@ -5,6 +5,7 @@ using System.Net;
 using Unsplasharp.Models;
 using GenerateDishesAPI.Models.DTOs;
 using GenerateDishesAPI.Models.ViewModels;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GenerateDishesAPI.Repositories
 {
@@ -200,34 +201,58 @@ namespace GenerateDishesAPI.Repositories
 			return dishAndUrlViewModel;
 		}
 
-		public IResult AddAllergiesAndDietsToUser(string userId, string[]? allergies, string[]? diets)
+		//Adds allergies and diet to user
+		public IResult AddAllergiesAndDietToUser(string userId, string[]? allergies, string? diet)
 		{
+			//gets user by id
 			ApplicationUser? user = _context.Users
 				.Where(u => u.Id == userId)
-				.Include (u => u.Diets)
+				.Include (u => u.Diet)
 				.Include (u => u.Allergies)
 				.FirstOrDefault();
 
+			Diet? dietToRemove = _context.Diets
+				.Where(fk => fk.ApplicationUserId == user.Id)
+				.FirstOrDefault();
+
+            Console.WriteLine("hej");
+            //Removes all users saved allergies
+            while (user.Allergies.Any())
+			{
+				user.Allergies.Remove(user.Allergies.FirstOrDefault());
+			}
+			
 			if(user == null)
 			{
 				return Results.NotFound("User was not found");
 			}
 
-			foreach (string diet in diets)
+			//adds new allergies to user
+			if (allergies.Length > 0)
 			{
-				user.Diets.Add(new Diet
+				foreach (string allergy in allergies)
+				{
+					user.Allergies.Add(new Allergy
+					{
+						AllergyName = allergy,
+					});
+				}
+			}
+
+			//adds new diet to user
+			if(diet.IsNullOrEmpty())
+			{
+				//Remove diet first
+				_context.Diets.Remove(dietToRemove);
+			}
+			else
+			{
+				user.Diet = (new Diet
 				{
 					DietName = diet,
 				});
 			}
-
-			foreach (string allergy in allergies)
-			{
-				user.Allergies.Add(new Allergy
-				{
-					AllergyName = allergy,
-				});
-			}
+			
 			_context.SaveChanges();
 
 			return Results.Created();
@@ -237,7 +262,7 @@ namespace GenerateDishesAPI.Repositories
 		{
 			ApplicationUser? user = _context.Users
 				.Where(u => u.Id == userId)
-				.Include(u => u.Diets)
+				.Include(u => u.Diet)
 				.Include(u => u.Allergies)
 				.FirstOrDefault();
 
@@ -248,10 +273,10 @@ namespace GenerateDishesAPI.Repositories
 
 			return new AllergyAndDietViewModel
 			{
-				Diets = user.Diets.Select(d => new DietViewModel
+				Diet = new DietViewModel
 				{
-					DietName = d.DietName
-				}).ToList(),
+					DietName = user.Diet.DietName
+				},
 				Allergies = user.Allergies.Select(d => new AllergyViewModel
 				{
 					AllergyName = d.AllergyName
@@ -259,17 +284,43 @@ namespace GenerateDishesAPI.Repositories
 			};
 		}
 
-		public EmailViewModel GetUserEmail (string userId)
+		public UserViewModel GetUserInfo (string userId)
 		{
 			ApplicationUser? user = _context.Users
 				.Where(u => u.Id == userId)
 				.FirstOrDefault();
 
-			return new EmailViewModel
+			return new UserViewModel
 			{
-				Email = user.Email
+				Email = user.Email,
+				UserId = user.Id
 			};
 				
 		}
-    }
+
+		public string GetUserDiet (string userId)
+		{
+			ApplicationUser? user = _context.Users
+				.Where(u => u.Id == userId)
+				.Include(u => u.Diet)
+				.FirstOrDefault();
+
+			if (user.Diet == null)
+			{
+				return "no";
+			}
+			return user.Diet.DietName;
+		}
+
+		public string[]? GetUserAllergies(string userId)
+		{
+			ApplicationUser? user = _context.Users
+				.Where(u => u.Id == userId)
+				.Include(u => u.Allergies)
+				.FirstOrDefault();
+
+			return user.Allergies.Select(u => u.AllergyName).ToArray();
+		}
+
+	}
 }
