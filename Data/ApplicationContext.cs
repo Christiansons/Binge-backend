@@ -12,6 +12,8 @@ namespace GenerateDishesAPI.Data
         public DbSet<Ingredient> Ingredients { get; set; }
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<ApplicationUser> Users { get; set; }
+        public DbSet<Diet> Diets {  get; set; } 
+        public DbSet<Allergy> Allergies { get; set; }
 
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options) { }
 

@@ -261,11 +261,13 @@ namespace GenerateDishesAPI.Repositories
 
 		public EmailViewModel GetUserEmail (string userId)
 		{
+			ApplicationUser? user = _context.Users
+				.Where(u => u.Id == userId)
+				.FirstOrDefault();
+
 			return new EmailViewModel
 			{
-				Email = _context.Users
-				.Where(u => u.Id == userId)
-				.Select(u => u.Email).ToString()
+				Email = user.Email
 			};
 				
 		}

@@ -42,7 +42,7 @@ namespace GenerateDishesAPI.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Allergy");
+                    b.ToTable("Allergies");
                 });
 
             modelBuilder.Entity("GenerateDishesAPI.Models.ApplicationUser", b =>
@@ -130,7 +130,7 @@ namespace GenerateDishesAPI.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Diet");
+                    b.ToTable("Diets");
                 });
 
             modelBuilder.Entity("GenerateDishesAPI.Models.Dish", b =>
