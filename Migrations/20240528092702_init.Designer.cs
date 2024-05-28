@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenerateDishesAPI.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240523232317_init")]
+    [Migration("20240528092702_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -24,6 +24,29 @@ namespace GenerateDishesAPI.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("GenerateDishesAPI.Models.Allergy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AllergyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Allergies");
+                });
 
             modelBuilder.Entity("GenerateDishesAPI.Models.ApplicationUser", b =>
                 {
@@ -88,6 +111,29 @@ namespace GenerateDishesAPI.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("GenerateDishesAPI.Models.Diet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DietName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Diets");
                 });
 
             modelBuilder.Entity("GenerateDishesAPI.Models.Dish", b =>
@@ -294,6 +340,28 @@ namespace GenerateDishesAPI.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("GenerateDishesAPI.Models.Allergy", b =>
+                {
+                    b.HasOne("GenerateDishesAPI.Models.ApplicationUser", "user")
+                        .WithMany("Allergies")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("GenerateDishesAPI.Models.Diet", b =>
+                {
+                    b.HasOne("GenerateDishesAPI.Models.ApplicationUser", "user")
+                        .WithMany("Diets")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
             modelBuilder.Entity("GenerateDishesAPI.Models.Dish", b =>
                 {
                     b.HasOne("GenerateDishesAPI.Models.ApplicationUser", "user")
@@ -380,6 +448,10 @@ namespace GenerateDishesAPI.Migrations
 
             modelBuilder.Entity("GenerateDishesAPI.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("Allergies");
+
+                    b.Navigation("Diets");
+
                     b.Navigation("Dishes");
                 });
 

@@ -13,6 +13,8 @@ using GenerateDishesAPI.Handlers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
 using GenerateDishesAPI.Models.DTOs;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GenerateDishesAPI
 {
@@ -34,18 +36,18 @@ namespace GenerateDishesAPI
 
 			builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
-			
+
 			//Add cors
-			//builder.Services.AddCors(options =>
-			//{
-			//	options.AddPolicy("AllowSpecificOrigin",
-			//		builder =>
-			//		{
-			//			builder.WithOrigins("https://example.com", "yomo", "otmeo") // Replace with your front-end origin
-			//				   .AllowAnyHeader()
-			//				   .AllowAnyMethod();
-			//		});
-			//});	
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("AllowSpecificOrigin",
+					builder =>
+					{
+						builder.WithOrigins("http://localhost:5173") // Replace with your front-end origin
+							   .AllowAnyHeader()
+							   .AllowAnyMethod();
+					});
+			});
 
 			//Identity stuff
 
@@ -101,8 +103,8 @@ namespace GenerateDishesAPI
 			app.UseHttpsRedirection();
 
 			//Use cors
-			//app.UseRouting();
-			//app.UseCors("AllowSpecificOrigin");
+			app.UseRouting();
+			app.UseCors("AllowSpecificOrigin");
 
 			app.UseAuthorization();
 
@@ -207,9 +209,9 @@ namespace GenerateDishesAPI
 				return dbhelper.GetAllDishesConnectedToUser(userId);
 			});
 
-			app.MapPost("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, string[] allergies, string[] diets) =>
+			app.MapPost("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, AllergyAndDietDTO dto) =>
 			{
-				return dbHelper.AddAllergiesAndDietsToUser(userId, allergies, diets);
+				return dbHelper.AddAllergiesAndDietsToUser(userId, dto.allergies, dto.diets);
 			});
 
 			app.MapGet("GetAllergiesAndDiets", (DbHelpers DbHelpers, string userId) =>
