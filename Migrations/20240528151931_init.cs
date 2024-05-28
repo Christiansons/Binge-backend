@@ -304,7 +304,8 @@ namespace GenerateDishesAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Diets_ApplicationUserId",
                 table: "Diets",
-                column: "ApplicationUserId");
+                column: "ApplicationUserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Dishes_ApplicationUserId",

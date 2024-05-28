@@ -17,9 +17,11 @@ namespace GenerateDishesAPI.Handlers
 			_dbHelpers = dbHelpers;
 		}
 
-        public async Task<string> GenerateDishesAsync()
+        public async Task<string> GenerateDishesAsync(string userId)
         {
-			string query = $"print the name of 10 different dishes(seperated with a comma)"; /*, adjust for: {preferences}*/
+			string diet = _dbHelpers.GetUserDiet(userId);
+
+			string query = $"print the name of 10 different dishes(seperated with a comma), adjust for: {diet} diet"; /*, adjust for: {preferences}*/
 
 			var chat = _api.Chat.CreateConversation();
 
@@ -30,15 +32,23 @@ namespace GenerateDishesAPI.Handlers
 
 			chat.AppendSystemMessage("You are a food recepie database and will give out food recepies");
 			//Lägg till appends för json
-			chat.AppendUserInput(query);
-			chat.AppendExampleChatbotOutput("Beef wellington, Homemade pizza, Spaghetti carbonara, Birria tacos, Meatloaf, Fried chicken sandwich, Pulled pork, Escargot, Sushi, Mango sticky rice");
+			chat.AppendUserInput("print the name of 10 different dishes(seperated with a comma), adjust for: no diet");
+			chat.AppendExampleChatbotOutput("Beef wellington,Homemade pizza,Spaghetti carbonara,Birria tacos,Meatloaf,Fried chicken sandwich,Pulled pork,Escargot,Sushi,Mango sticky rice");
+			chat.AppendUserInput("print the name of 10 different dishes(seperated with a comma), adjust for: vegan diet");
+			chat.AppendExampleChatbotOutput("Vegan lasagna,Vegan Pad Thai,Lentil Curry,Vegan Tacos,Vegan Chili,Stuffed Bell Peppers,Vegan Sushi Rolls,Roasted Vegetable Pasta,Chickpea Salad Sandwich");
+			chat.AppendUserInput("print the name of 10 different dishes(seperated with a comma), adjust for: no diet");
+			chat.AppendExampleChatbotOutput("Beef Bourguignon,Paella,Moussaka,Tacos al Pastor,Pad Thai,Ratatouille,Bibimbap,Butter Chicken,Falafel");
+			chat.AppendUserInput("print the name of 10 different dishes(seperated with a comma), adjust for: vegetarian diet");
+			chat.AppendExampleChatbotOutput("Vegetable Stir-Fry,Homemade vegetarian pizza,Lentil Soup,Vegetarian tacos,Paneer Butter Masala,Vegetable Samosas,Mushroom Risotto, Escargot,Vegetarian Sushi,Greek Salad");
 			chat.AppendUserInput(query);
 			var answer = await chat.GetResponseFromChatbotAsync();
 			return answer;
 		}
 
-		public async Task<string> GenerateIngredientsAsync(string dishName, int numOfPeople, string[]? allergies)
+		public async Task<string> GenerateIngredientsAsync(string dishName, int numOfPeople, string userId)
 		{
+			string[]? allergies = _dbHelpers.GetUserAllergies(userId);
+
 			string allergiesInString = "";
 			if (allergies.Length < 1 || allergies == null)
 			{
@@ -62,7 +72,7 @@ namespace GenerateDishesAPI.Handlers
 			chat.RequestParameters.Temperature = 1;
 
 			chat.AppendSystemMessage("You are a food recipe database and will give out food recepies, seperated with a comma");
-			chat.AppendUserInput($"print the ingredients for dish: spaghetti carbonara, adjust for 4 people");
+			chat.AppendUserInput($"print the ingredients for dish: spaghetti carbonara, adjust for 4 people, adjust for these: 'none' allergies");
 			chat.AppendExampleChatbotOutput("400g pasta, 4 eggs, 30g pecorino cheese, 200g pancetta, 30g parmesan cheese, salt, pepper");
 			chat.AppendUserInput(query);
 			var answer = await chat.GetResponseFromChatbotAsync();

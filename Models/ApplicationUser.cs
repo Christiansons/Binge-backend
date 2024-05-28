@@ -6,6 +6,6 @@ namespace GenerateDishesAPI.Models
 	{
         public ICollection<Dish>? Dishes { get; set; } = new List<Dish>();
 		public ICollection<Allergy>? Allergies { get; set; } = new List<Allergy>();
-		public ICollection<Diet>? Diets { get; set; } = new List<Diet>();
+		public Diet? Diet { get; set; }
 	}
 }

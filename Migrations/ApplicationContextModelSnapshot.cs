@@ -128,7 +128,8 @@ namespace GenerateDishesAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationUserId");
+                    b.HasIndex("ApplicationUserId")
+                        .IsUnique();
 
                     b.ToTable("Diets");
                 });
@@ -351,8 +352,8 @@ namespace GenerateDishesAPI.Migrations
             modelBuilder.Entity("GenerateDishesAPI.Models.Diet", b =>
                 {
                     b.HasOne("GenerateDishesAPI.Models.ApplicationUser", "user")
-                        .WithMany("Diets")
-                        .HasForeignKey("ApplicationUserId")
+                        .WithOne("Diet")
+                        .HasForeignKey("GenerateDishesAPI.Models.Diet", "ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -447,7 +448,7 @@ namespace GenerateDishesAPI.Migrations
                 {
                     b.Navigation("Allergies");
 
-                    b.Navigation("Diets");
+                    b.Navigation("Diet");
 
                     b.Navigation("Dishes");
                 });

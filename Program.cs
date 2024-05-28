@@ -110,6 +110,7 @@ namespace GenerateDishesAPI
 
 			app.MapControllers();
 
+			//Use identity endpoints
 			app.MapIdentityApi<ApplicationUser>();
 
 			//app.MapPost("/register", async (UserManager<ApplicationUser> userManager, string email, string userName, string password) =>
@@ -145,10 +146,10 @@ namespace GenerateDishesAPI
 				return (user.Id); //Skapa DTO
 			});
 
-			app.MapGet("ChatAi", async (OpenAiHandler aiHandler) =>
+			app.MapGet("ChatAi", async (OpenAiHandler aiHandler, string userId) =>
 			{
-				return await aiHandler.GenerateDishesAsync();
-            });	
+				return await aiHandler.GenerateDishesAsync(userId);
+            });
 
 			app.MapGet("/img", async (UnsplashHandler unsplashHandler, string imgQuery) =>
 			{
@@ -165,9 +166,9 @@ namespace GenerateDishesAPI
 				return dbHelper.SaveDishAndUrl(dishName, url, userId);
 			});
 
-			app.MapGet("GenerateIngredients/{dishName}/{numOfPeople}", async (OpenAiHandler aiHandler, string dishName, int numOfPeople, string[]? allergies) =>
+			app.MapGet("GenerateIngredients/{dishName}/{numOfPeople}/{userId}", async (OpenAiHandler aiHandler, string dishName, int numOfPeople, string userId) =>
 			{
-				return await aiHandler.GenerateIngredientsAsync(dishName, numOfPeople, allergies);
+				return await aiHandler.GenerateIngredientsAsync(dishName, numOfPeople, userId);
 			});
 
 			app.MapGet("GenerateInstructions/{dishName}", async (OpenAiHandler aiHandler, string dishName, string[] ingredients) =>
@@ -175,19 +176,14 @@ namespace GenerateDishesAPI
 				return await aiHandler.GenerateRecipeAsync(dishName, ingredients);
 			});
 
-			app.MapPost("/SparaHelaDishen", async (DbHelpers helper, string userId, string dishName, string[] ingredients, string recipe) =>
-			{
-				helper.SaveIngredientsAndRecipe(userId, dishName, ingredients, recipe);
-			});
-
-			app.MapGet("GetIngredientsAndRecipe", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string[]? allergies, string userId) =>
+			app.MapGet("GetIngredientsAndRecipe", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string userId) =>
 			{
 				if (dbHelper.CheckIfRecipeAdded(dishName, userId))
 				{
 					CompleteDishDTO dish = dbHelper.GetCompleteDishFromDb(userId, dishName);
 					return dish;
 				}
-				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, allergies, userId);
+				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, userId);
 
 			});
 
@@ -197,10 +193,10 @@ namespace GenerateDishesAPI
 			});
 
 			//Endpoint if serving size changes, removes old recipe and ingredients and generates new recipe with uppdated serving size
-			app.MapGet("/UpdateDish", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string[]? allergies, string userId) =>
+			app.MapGet("/UpdateDish", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string userId) =>
 			{
 				dbHelper.DeleteRecipeFromDb(dishName, userId);
-				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, allergies, userId);
+				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, userId);
 			});
 
 			//Show all dishes and pictures conneted to user
@@ -209,9 +205,9 @@ namespace GenerateDishesAPI
 				return dbhelper.GetAllDishesConnectedToUser(userId);
 			});
 
-			app.MapPost("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, AllergyAndDietDTO dto) =>
+			app.MapGet("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, string[]? allergies, string? diet) =>
 			{
-				return dbHelper.AddAllergiesAndDietsToUser(userId, dto.allergies, dto.diets);
+				return dbHelper.AddAllergiesAndDietToUser(userId, allergies, diet);
 			});
 
 			app.MapGet("GetAllergiesAndDiets", (DbHelpers DbHelpers, string userId) =>
@@ -219,19 +215,13 @@ namespace GenerateDishesAPI
 				return DbHelpers.GetAllAllergiesAndDietsConnectedToUser(userId);
 			});
 
-			app.MapGet("GetUserEmail", (DbHelpers dbHelper, string userId) =>
+			app.MapGet("GetUserInfo", (DbHelpers dbHelper, string userId) =>
 			{
-				return dbHelper.GetUserEmail(userId);
+				return dbHelper.GetUserInfo(userId);
 			});
 
-			//endpoint Show all dishes and pictures
-
-			//Save dish to user
-
-
+			//uppdatera allergier och dieter
 			app.Run();
 		}
-
-		//Namn email, id, lösen
 	}
 }
