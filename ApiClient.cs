@@ -52,14 +52,14 @@ namespace GenerateDishesAPI
 			}
 		}
 
-		public async Task<List<UrlAndDishNameDTO>> GetPicturesAndDishesAsync()
+		public async Task<List<UrlAndDishNameDTO>> GetPicturesAndDishesAsync(string userId)
 		{
 			List<UrlAndDishNameDTO> dtos = new List< UrlAndDishNameDTO>();
 			UrlAndDishNameDTO dto;
 			int counter = 0;
 
 			//Get 10 dish-names from method that calls ChatAi
-			string[] dishes = await GetDishesAsync($"{_url}/ChatAi");
+			string[] dishes = await GetDishesAsync($"{_url}/ChatAi/{userId}");
 			
 			foreach (string dish in dishes)
 			{

@@ -146,7 +146,7 @@ namespace GenerateDishesAPI
 				return (user.Id); //Skapa DTO
 			});
 
-			app.MapGet("ChatAi", async (OpenAiHandler aiHandler, string userId) =>
+			app.MapGet("ChatAi/{userId}", async (OpenAiHandler aiHandler, string userId) =>
 			{
 				return await aiHandler.GenerateDishesAsync(userId);
             });
@@ -156,9 +156,9 @@ namespace GenerateDishesAPI
 				return await unsplashHandler.GeneratePictureUrlAsync(imgQuery);
 			});
 
-			app.MapGet("/PicturesAndUrls", async (ApiClient client) =>
+			app.MapGet("/PicturesAndUrls", async (ApiClient client, string userId) =>
 			{
-				return await client.GetPicturesAndDishesAsync();
+				return await client.GetPicturesAndDishesAsync(userId);
 			});
 			
 			app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string userId) =>
