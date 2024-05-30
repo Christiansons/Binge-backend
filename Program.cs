@@ -33,6 +33,7 @@ namespace GenerateDishesAPI
 			builder.Services.AddScoped<DbHelpers>();
 			builder.Services.AddScoped<OpenAiHandler>();
 			builder.Services.AddScoped<UnsplashHandler>();
+			builder.Services.AddScoped<HttpClient>();
 
 			builder.Services.AddDbContext<ApplicationContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationContext")));
@@ -158,12 +159,30 @@ namespace GenerateDishesAPI
 
 			app.MapGet("/PicturesAndUrls", async (ApiClient client, string userId) =>
 			{
-				return await client.GetPicturesAndDishesAsync(userId);
+				try
+				{
+					return Results.Ok(await client.GetPicturesAndDishesAsync(userId));
+				}
+				catch
+				{
+					return Results.BadRequest("Error getting pictures and urls");
+				}
 			});
 			
-			app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string userId) =>
+			//app.MapPost("/SaveDishAndUrl", (DbHelpers dbHelper, string dishName, string url, string userId) =>
+			//{
+			//	return dbHelper.SaveDishAndUrl(dishName, url, userId);
+			//});
+
+			app.MapPost("/SaveDishAndUrl", async (HttpContext httpContext, DbHelpers dbHelper) =>
 			{
-				return dbHelper.SaveDishAndUrl(dishName, url, userId);
+				var dishRequest = await httpContext.Request.ReadFromJsonAsync<DishRequest>();
+				if (dishRequest == null)
+				{
+					return Results.BadRequest("Skicka rätt data vafan");
+				}
+				var result = dbHelper.SaveDishAndUrl(dishRequest.DishName, dishRequest.Url, dishRequest.UserId);
+				return Results.Ok(result);
 			});
 
 			app.MapGet("GenerateIngredients/{dishName}/{numOfPeople}/{userId}", async (OpenAiHandler aiHandler, string dishName, int numOfPeople, string userId) =>
