@@ -59,7 +59,9 @@ namespace GenerateDishesAPI
 			int counter = 0;
 
 			//Get 10 dish-names from method that calls ChatAi
+			
 			string[] dishes = await GetDishesAsync($"{_url}/ChatAi/{userId}");
+			
 			
 			foreach (string dish in dishes)
 			{

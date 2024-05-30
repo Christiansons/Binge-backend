@@ -134,16 +134,16 @@ namespace GenerateDishesAPI
 				var passwordCheck = await userManager.CheckPasswordAsync(user, password);
 				if (!passwordCheck)
 				{
-					return "No bueno";
+					return Results.BadRequest("No bueno");
 				}
 
 				// Sign-in
 				var result = await SignInManager.PasswordSignInAsync(user, password, isPersistent: false, false);
 				var token = await userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultProvider, "login");
-				
-				//Return result
 
-				return (user.Id); //Skapa DTO
+				//Return result
+				userIdDto userId = new userIdDto { UserId = user.Id };
+				return Results.Ok(userId); //Skapa DTO
 			});
 
 			app.MapGet("ChatAi/{userId}", async (OpenAiHandler aiHandler, string userId) =>
