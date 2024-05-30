@@ -126,7 +126,7 @@ namespace GenerateDishesAPI
 			//	return newUser;
 			//});
 
-			app.MapGet("/login", async (UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager, string email, string password) =>
+			app.MapPost("/login2", async (UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> SignInManager, string email, string password) =>
 			{
 				var user = await userManager.FindByEmailAsync(email);
 
