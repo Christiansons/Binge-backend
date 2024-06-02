@@ -224,7 +224,7 @@ namespace GenerateDishesAPI
 				return dbhelper.GetAllDishesConnectedToUser(userId);
 			});
 
-			app.MapGet("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, string[]? allergies, string? diet) =>
+			app.MapPost("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, string[]? allergies, string? diet) =>
 			{
 				return dbHelper.AddAllergiesAndDietToUser(userId, allergies, diet);
 			});
