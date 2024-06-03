@@ -232,6 +232,7 @@ namespace GenerateDishesAPI.Repositories
 		//Adds allergies and diet to user
 		public IResult AddAllergiesAndDietToUser(string userId, string[]? allergies, string? diet)
 		{
+
 			//gets user by id
 			ApplicationUser? user = _context.Users
 				.Where(u => u.Id == userId)
@@ -239,25 +240,21 @@ namespace GenerateDishesAPI.Repositories
 				.Include (u => u.Allergies)
 				.FirstOrDefault();
 
+			if (user == null)
+			{
+				return Results.NotFound("User was not found");
+			}
+
+			//Removes all users saved allergies
+			user.Allergies.Clear();
 
 			//Gets the connected diet
 			Diet? dietToRemove = _context.Diets
 				.Where(fk => fk.ApplicationUserId == user.Id)
 				.FirstOrDefault();
-           
-			//Removes all users saved allergies
-            while (user.Allergies.Any())
-			{
-				user.Allergies.Remove(user.Allergies.FirstOrDefault());
-			}
-			
-			if(user == null)
-			{
-				return Results.NotFound("User was not found");
-			}
 
 			//adds new allergies to user
-			if (allergies.Length > 0)
+			if (allergies != null && allergies.Length > 0)
 			{
 				foreach (string allergy in allergies)
 				{
@@ -269,7 +266,7 @@ namespace GenerateDishesAPI.Repositories
 			}
 
 			//adds new diet to user
-			if(diet.IsNullOrEmpty())
+			if(string.IsNullOrEmpty(diet))
 			{
 				//Remove diet first
 				if(dietToRemove != null)
@@ -279,16 +276,23 @@ namespace GenerateDishesAPI.Repositories
 			}
 			else
 			{
-				user.Diet = (new Diet
+				if (dietToRemove != null)
 				{
-					DietName = diet,
-				});
+					dietToRemove.DietName = diet;
+				}else
+				{
+					user.Diet = new Diet
+					{
+						DietName = diet,
+					};
+				}
 			}
 			
 			_context.SaveChanges();
 
 			return Results.Created();
 		}
+		
 
 		public AllergyAndDietViewModel GetAllAllergiesAndDietsConnectedToUser (string userId)
 		{
