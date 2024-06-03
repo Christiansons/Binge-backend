@@ -239,12 +239,13 @@ namespace GenerateDishesAPI.Repositories
 				.Include (u => u.Allergies)
 				.FirstOrDefault();
 
+
+			//Gets the connected diet
 			Diet? dietToRemove = _context.Diets
 				.Where(fk => fk.ApplicationUserId == user.Id)
 				.FirstOrDefault();
-
-            Console.WriteLine("hej");
-            //Removes all users saved allergies
+           
+			//Removes all users saved allergies
             while (user.Allergies.Any())
 			{
 				user.Allergies.Remove(user.Allergies.FirstOrDefault());
@@ -271,7 +272,10 @@ namespace GenerateDishesAPI.Repositories
 			if(diet.IsNullOrEmpty())
 			{
 				//Remove diet first
-				_context.Diets.Remove(dietToRemove);
+				if(dietToRemove != null)
+				{
+					_context.Diets.Remove(dietToRemove);
+				}
 			}
 			else
 			{
@@ -296,19 +300,37 @@ namespace GenerateDishesAPI.Repositories
 
 			if (user == null)
 			{
-				return null;
+				return null; //Bättre felhantering här
 			}
+
+			string diet;
+			List<string> allergies;
+
+			if (user.Allergies.IsNullOrEmpty())
+			{
+				allergies = new List<string> { };
+			} else
+			{
+				allergies = user.Allergies.Select(a => a.AllergyName).ToList();
+			}
+
+			if(user.Diet == null)
+			{
+				diet = string.Empty;
+			}
+			else
+			{
+				diet = user.Diet.DietName;
+			}
+
 
 			return new AllergyAndDietViewModel
 			{
 				Diet = new DietViewModel
 				{
-					DietName = user.Diet.DietName
+					DietName = diet
 				},
-				Allergies = user.Allergies.Select(d => new AllergyViewModel
-				{
-					AllergyName = d.AllergyName
-				}).ToList()
+				Allergies = allergies
 			};
 		}
 

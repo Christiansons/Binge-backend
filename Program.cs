@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using GenerateDishesAPI.Models.DTOs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 
 namespace GenerateDishesAPI
 {
@@ -235,9 +236,16 @@ namespace GenerateDishesAPI
 				return dbhelper.GetAllDishesConnectedToUser(userId);
 			});
 
-			app.MapPost("PostAllergiesAndDiets", (DbHelpers dbHelper, string userId, string[]? allergies, string? diet) =>
+			app.MapPost("PostAllergiesAndDiets", async (HttpContext httpContext, DbHelpers dbHelper /*,string userId, string[]? allergies, string? diet*/) =>
 			{
-				return dbHelper.AddAllergiesAndDietToUser(userId, allergies, diet);
+				var allergiesAndDiet = await httpContext.Request.ReadFromJsonAsync<DietAndAllergyPostRequest>();
+				if (allergiesAndDiet == null)
+				{
+					return Results.BadRequest("Skickar ju fel grejer!");
+				}
+
+				var result = dbHelper.AddAllergiesAndDietToUser(allergiesAndDiet.userId, allergiesAndDiet.allergies, allergiesAndDiet.diet);
+				return Results.Ok(result);
 			});
 
 			app.MapGet("GetAllergiesAndDiets", (DbHelpers DbHelpers, string userId) =>

@@ -3,6 +3,6 @@
 	public class AllergyAndDietViewModel
 	{
 		public DietViewModel? Diet { get; set; }
-		public ICollection<AllergyViewModel>? Allergies { get; set; }
+		public List<string>? Allergies { get; set; }
 	}
 }
