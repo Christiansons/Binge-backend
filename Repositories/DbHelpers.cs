@@ -232,7 +232,6 @@ namespace GenerateDishesAPI.Repositories
 		//Adds allergies and diet to user
 		public IResult AddAllergiesAndDietToUser(string userId, string[]? allergies, string? diet)
 		{
-
 			//gets user by id
 			ApplicationUser? user = _context.Users
 				.Where(u => u.Id == userId)
@@ -246,12 +245,14 @@ namespace GenerateDishesAPI.Repositories
 			}
 
 			//Removes all users saved allergies
-			user.Allergies.Clear();
-
-			//Gets the connected diet
-			Diet? dietToRemove = _context.Diets
-				.Where(fk => fk.ApplicationUserId == user.Id)
-				.FirstOrDefault();
+			if(user.Allergies != null)
+			{
+				var existingAllergies = user.Allergies.ToList();
+				foreach (var allergy in existingAllergies)
+				{
+					_context.Allergies.Remove(allergy);
+				}
+			}
 
 			//adds new allergies to user
 			if (allergies != null && allergies.Length > 0)
@@ -264,6 +265,11 @@ namespace GenerateDishesAPI.Repositories
 					});
 				}
 			}
+
+			//Gets the connected diet
+			Diet? dietToRemove = _context.Diets
+				.Where(fk => fk.ApplicationUserId == user.Id)
+				.FirstOrDefault();
 
 			//adds new diet to user
 			if(string.IsNullOrEmpty(diet))
