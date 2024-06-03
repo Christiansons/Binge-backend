@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenerateDishesAPI.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240528151931_init")]
+    [Migration("20240603102437_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -152,6 +152,9 @@ namespace GenerateDishesAPI.Migrations
                     b.Property<string>("DishName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Servings")
+                        .HasColumnType("int");
 
                     b.Property<string>("Url")
                         .HasColumnType("nvarchar(max)");

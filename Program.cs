@@ -44,7 +44,7 @@ namespace GenerateDishesAPI
 				options.AddPolicy("AllowSpecificOrigin",
 					builder =>
 					{
-						builder.WithOrigins("http://localhost:5173") // Replace with your front-end origin
+						builder.WithOrigins("http://localhost:5173")
 							   .AllowAnyHeader()
 							   .AllowAnyMethod();
 					});
@@ -181,6 +181,8 @@ namespace GenerateDishesAPI
 				{
 					return Results.BadRequest("Skicka rätt data vafan");
 				}
+
+
 				var result = dbHelper.SaveDishAndUrl(dishRequest.DishName, dishRequest.Url, dishRequest.UserId);
 				return Results.Ok(result);
 			});
@@ -197,11 +199,20 @@ namespace GenerateDishesAPI
 
 			app.MapGet("GetIngredientsAndRecipe", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string userId) =>
 			{
+				//Checks if serving size has changed and deletes recipe from database
+				if (dbHelper.CheckNumOfPeopleForRecipe(userId, dishName) != null || dbHelper.CheckNumOfPeopleForRecipe(userId, dishName) != numOfPeople)
+				{
+					dbHelper.DeleteRecipeFromDb(dishName, userId);
+				}
+
+				//If recipe is already generated return the recipe from database
 				if (dbHelper.CheckIfRecipeAdded(dishName, userId))
 				{
 					CompleteDishDTO dish = dbHelper.GetCompleteDishFromDb(userId, dishName);
 					return dish;
 				}
+
+				//Generates a new recipe and ingredients based on how many people
 				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, userId);
 
 			});

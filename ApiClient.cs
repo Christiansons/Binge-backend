@@ -12,7 +12,6 @@ namespace GenerateDishesAPI
 	{
 		private readonly HttpClient _httpClient;
 		private readonly DbHelpers _dbHelpers;
-		
 		private readonly string _url = "https://azurefoodapi.azurewebsites.net";
 
 		public ApiClient(DbHelpers dbHelpers)
@@ -131,7 +130,7 @@ namespace GenerateDishesAPI
 			// Read the response content as a string
 			string instructions = await response.Content.ReadAsStringAsync();
 			
-			_dbHelpers.SaveIngredientsAndRecipe(userId, dishName, ingredients, instructions);
+			_dbHelpers.SaveIngredientsAndRecipe(userId, dishName, ingredients, instructions, numOfPeople);
 			
 			
 			

@@ -51,6 +51,24 @@ namespace GenerateDishesAPI.Repositories
 			}
 		}
 
+		public int? CheckNumOfPeopleForRecipe(string userId, string dishName)
+		{
+			try
+			{
+				Dish? dish = _context.Dishes
+				.Where(d => d.DishName == dishName)
+				.Where(d => d.ApplicationUserId == userId)
+				.Include(d => d.Servings)
+				.FirstOrDefault();
+
+				return dish.Servings;
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
+
 		public CompleteDishDTO GetCompleteDishFromDb(string userId, string dishName)
 		{
 			Dish? dish = _context.Dishes
@@ -70,7 +88,7 @@ namespace GenerateDishesAPI.Repositories
 			return dishDTO;
 		}
 
-		public IResult SaveIngredientsAndRecipe(string userId, string dishName, string[] ingredients, string recipe)
+		public IResult SaveIngredientsAndRecipe(string userId, string dishName, string[] ingredients, string recipe, int numOfPeople)
 		{	
 			ApplicationUser? user = _context.Users.Where(u => u.Id == userId).FirstOrDefault();
 
@@ -86,7 +104,6 @@ namespace GenerateDishesAPI.Repositories
 			}
 
 			//Add all the ingredients to the dish
-
 			try
 			{
 				foreach (var Ingredient in ingredients)
@@ -102,6 +119,8 @@ namespace GenerateDishesAPI.Repositories
 			{
 				return Results.BadRequest("Gick inte att lägga till ingredienser till rätten");
 			}
+
+			//Add the cooking instructions to dish
 			try
 			{
 				dish.Recipe = new Recipe
@@ -115,6 +134,17 @@ namespace GenerateDishesAPI.Repositories
 			{
 				return Results.BadRequest("Gick inte att lägga till recept till rätten");
 			}
+
+			//Add the serving size to dish
+			try
+			{
+				dish.Servings = numOfPeople;
+			}catch
+			{
+				return Results.BadRequest("Gick inte att lägga till antalet serveringar till rätten");
+			}
+
+			//Try saving the dish
 			try
 			{
 				_context.SaveChanges();
@@ -123,10 +153,8 @@ namespace GenerateDishesAPI.Repositories
 			{
 				return Results.BadRequest("Gick inte att spara hela skiten");
 			}
-				
 
 			return Results.Created();
-			
 		}
 
 		public bool CheckIfRecipeAdded(string dishName, string userId)

@@ -204,6 +204,7 @@ namespace GenerateDishesAPI.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DishName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Url = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Servings = table.Column<int>(type: "int", nullable: true),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
