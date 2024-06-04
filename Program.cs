@@ -45,7 +45,7 @@ namespace GenerateDishesAPI
 				options.AddPolicy("AllowSpecificOrigin",
 					builder =>
 					{
-						builder.WithOrigins("http://localhost:5173")
+						builder.WithOrigins("http://localhost:5173", "http://10.100.2.80:5173")
 							   .AllowAnyHeader()
 							   .AllowAnyMethod();
 					});
