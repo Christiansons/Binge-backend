@@ -18,10 +18,11 @@ namespace GenerateDishesAPI
 
 	public class ApiClient : IApiClient
 	{
+		//https://localhost:7231
 		//https://azurefoodapi.azurewebsites.net
 		private readonly HttpClient _httpClient;
 		private readonly IDbHelper _dbHelpers;
-		private readonly string _url = "https://localhost:7231";
+		private readonly string _url = "https://azurefoodapi.azurewebsites.net";
 		public ApiClient(IDbHelper dbHelpers)
 		{
 			_httpClient = new HttpClient();
