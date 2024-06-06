@@ -29,11 +29,11 @@ namespace GenerateDishesAPI
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton(sp => new OpenAIAPI(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
-			builder.Services.AddScoped < ApiClient>();
+			builder.Services.AddScoped <IApiClient, ApiClient>();
 			builder.Services.AddScoped<UserManager<ApplicationUser>, UserManager<ApplicationUser>>();
-			builder.Services.AddScoped<DbHelpers>();
-			builder.Services.AddScoped<OpenAiHandler>();
-			builder.Services.AddScoped<UnsplashHandler>();
+			builder.Services.AddScoped<IDbHelper, DbHelper>();
+			builder.Services.AddScoped<IOpenAiHandler, OpenAiHandler>();
+			builder.Services.AddScoped<IUnsplashHandler, UnsplashHandler>();
 			builder.Services.AddScoped<HttpClient>();
 
 			builder.Services.AddDbContext<ApplicationContext>(options =>
@@ -148,17 +148,17 @@ namespace GenerateDishesAPI
 				return Results.Ok(userId); //Skapa DTO
 			});
 
-			app.MapGet("ChatAi/{userId}", async (OpenAiHandler aiHandler, string userId) =>
+			app.MapGet("ChatAi/{userId}", async (IOpenAiHandler aiHandler, string userId) =>
 			{
 				return await aiHandler.GenerateDishesAsync(userId);
             });
 
-			app.MapGet("/img", async (UnsplashHandler unsplashHandler, string imgQuery) =>
+			app.MapGet("/img", async (IUnsplashHandler unsplashHandler, string imgQuery) =>
 			{
 				return await unsplashHandler.GeneratePictureUrlAsync(imgQuery);
 			});
 
-			app.MapGet("/PicturesAndUrls", async (ApiClient client, string userId) =>
+			app.MapGet("/PicturesAndUrls", async (IApiClient client, string userId) =>
 			{
 				try
 				{
@@ -175,7 +175,7 @@ namespace GenerateDishesAPI
 			//	return dbHelper.SaveDishAndUrl(dishName, url, userId);
 			//});
 
-			app.MapPost("/SaveDishAndUrl", async (HttpContext httpContext, DbHelpers dbHelper) =>
+			app.MapPost("/SaveDishAndUrl", async (HttpContext httpContext, IDbHelper dbHelper) =>
 			{
 				var dishRequest = await httpContext.Request.ReadFromJsonAsync<DishRequest>();
 				if (dishRequest == null)
@@ -188,17 +188,18 @@ namespace GenerateDishesAPI
 				return Results.Ok(result);
 			});
 
-			app.MapGet("GenerateIngredients/{dishName}/{numOfPeople}/{userId}", async (OpenAiHandler aiHandler, string dishName, int numOfPeople, string userId) =>
+			app.MapGet("GenerateIngredients/{dishName}/{numOfPeople}/{userId}", async (IOpenAiHandler aiHandler, string dishName, int numOfPeople, string userId) =>
 			{
 				return await aiHandler.GenerateIngredientsAsync(dishName, numOfPeople, userId);
 			});
 
-			app.MapGet("GenerateInstructions/{dishName}", async (OpenAiHandler aiHandler, string dishName, string[] ingredients) =>
+			app.MapGet("GenerateInstructions/{dishName}", async (IOpenAiHandler aiHandler, string dishName, string[] ingredients) =>
 			{
 				return await aiHandler.GenerateRecipeAsync(dishName, ingredients);
 			});
 
-			app.MapGet("GetIngredientsAndRecipe", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string userId) =>
+			//Endpoint if serving size changes, removes old recipe and ingredients and generates new recipe with uppdated serving size
+			app.MapGet("GetIngredientsAndRecipe", async (IDbHelper dbHelper, IApiClient client, string dishName, int numOfPeople, string userId) =>
 			{
 				//Checks if serving size has changed and deletes recipe from database
 				if (dbHelper.CheckNumOfPeopleForRecipe(userId, dishName) != null || dbHelper.CheckNumOfPeopleForRecipe(userId, dishName) != numOfPeople)
@@ -218,25 +219,18 @@ namespace GenerateDishesAPI
 
 			});
 
-			app.MapDelete("/DeleteDish", (DbHelpers dbhelper, string dishName, string userId) =>
+			app.MapDelete("/DeleteDish", (IDbHelper dbhelper, string dishName, string userId) =>
 			{
 				dbhelper.DeleteDishFromDb(dishName, userId);
 			});
 
-			//Endpoint if serving size changes, removes old recipe and ingredients and generates new recipe with uppdated serving size
-			app.MapGet("/UpdateDish", async (DbHelpers dbHelper, ApiClient client, string dishName, int numOfPeople, string userId) =>
-			{
-				dbHelper.DeleteRecipeFromDb(dishName, userId);
-				return await client.GetIngredientsAndRecipeAsync(dishName, numOfPeople, userId);
-			});
-
 			//Show all dishes and pictures conneted to user
-			app.MapGet("/AllDishesAndUrlsConnectedToUser", (DbHelpers dbhelper, string userId) =>
+			app.MapGet("/AllDishesAndUrlsConnectedToUser", (IDbHelper dbhelper, string userId) =>
 			{
 				return dbhelper.GetAllDishesConnectedToUser(userId);
 			});
 
-			app.MapPost("PostAllergiesAndDiets", async (HttpContext httpContext, DbHelpers dbHelper /*,string userId, string[]? allergies, string? diet*/) =>
+			app.MapPost("PostAllergiesAndDiets", async (HttpContext httpContext, IDbHelper dbHelper /*,string userId, string[]? allergies, string? diet*/) =>
 			{
 				var allergiesAndDiet = await httpContext.Request.ReadFromJsonAsync<DietAndAllergyPostRequest>();
 				if (allergiesAndDiet == null)
@@ -248,12 +242,12 @@ namespace GenerateDishesAPI
 				return Results.Ok(result);
 			});
 
-			app.MapGet("GetAllergiesAndDiets", (DbHelpers DbHelpers, string userId) =>
+			app.MapGet("GetAllergiesAndDiets", (IDbHelper DbHelpers, string userId) =>
 			{
 				return DbHelpers.GetAllAllergiesAndDietsConnectedToUser(userId);
 			});
 
-			app.MapGet("GetUserInfo", (DbHelpers dbHelper, string userId) =>
+			app.MapGet("GetUserInfo", (IDbHelper dbHelper, string userId) =>
 			{
 				return dbHelper.GetUserInfo(userId);
 			});

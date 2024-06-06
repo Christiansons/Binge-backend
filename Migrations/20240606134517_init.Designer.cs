@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenerateDishesAPI.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20240603134616_init")]
+    [Migration("20240606134517_init")]
     partial class init
     {
         /// <inheritdoc />

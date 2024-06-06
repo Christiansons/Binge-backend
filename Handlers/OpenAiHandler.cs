@@ -6,12 +6,19 @@ using OpenAI_API;
 
 namespace GenerateDishesAPI.Handlers
 {
-	public class OpenAiHandler
+	public interface IOpenAiHandler
+	{
+		Task<string> GenerateDishesAsync(string userId);
+		Task<string> GenerateIngredientsAsync(string dishName, int numOfPeople, string userId);
+		Task<string> GenerateRecipeAsync(string dishName, string[] ingredients);
+	}
+
+	public class OpenAiHandler : IOpenAiHandler
 	{
 		private readonly OpenAIAPI _api;
-		private readonly DbHelpers _dbHelpers;
+		private readonly IDbHelper _dbHelpers;
 
-        public OpenAiHandler(OpenAIAPI api, DbHelpers dbHelpers)
+        public OpenAiHandler(OpenAIAPI api, IDbHelper dbHelpers)
         {
             _api = api;
 			_dbHelpers = dbHelpers;

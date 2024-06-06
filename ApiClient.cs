@@ -8,12 +8,21 @@ using Unsplasharp.Models;
 
 namespace GenerateDishesAPI
 {
-    public class ApiClient
+	public interface IApiClient
 	{
+		Task<string[]> GetDishesAsync(string path);
+		Task<List<UrlAndDishNameDTO>> GetPicturesAndDishesAsync(string userId);
+		Task<string[]> GetIngredientsAsync(string dishName, int numOfPeople, string userId);
+		Task<CompleteDishDTO> GetIngredientsAndRecipeAsync(string dishName, int numOfPeople, string userId);
+	}
+
+	public class ApiClient : IApiClient
+	{
+		//https://azurefoodapi.azurewebsites.net
 		private readonly HttpClient _httpClient;
-		private readonly DbHelpers _dbHelpers;
-		private readonly string _url = "https://azurefoodapi.azurewebsites.net";
-		public ApiClient(DbHelpers dbHelpers)
+		private readonly IDbHelper _dbHelpers;
+		private readonly string _url = "https://localhost:7231";
+		public ApiClient(IDbHelper dbHelpers)
 		{
 			_httpClient = new HttpClient();
 			_dbHelpers = dbHelpers;
@@ -24,6 +33,7 @@ namespace GenerateDishesAPI
 
 		//Endpoint åt frontend för ingredienser och 
 
+		//Will retrieve 10 names of dishes from openAi-api
 		public async Task<string[]> GetDishesAsync(string path)
 		{
 			try
@@ -32,7 +42,13 @@ namespace GenerateDishesAPI
 				HttpResponseMessage response = await _httpClient.GetAsync(path);
 
 				// Check if the request was successful
-				response.EnsureSuccessStatusCode();
+				if (!response.IsSuccessStatusCode)
+				{
+					return new string[]
+					{
+						"hej"
+					};
+				}
 
 				// Read the response content as a string
 				string responseBody = await response.Content.ReadAsStringAsync();

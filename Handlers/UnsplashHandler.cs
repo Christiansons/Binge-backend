@@ -2,7 +2,12 @@
 
 namespace GenerateDishesAPI.Handlers
 {
-	public class UnsplashHandler
+	public interface IUnsplashHandler
+	{
+		Task<string> GeneratePictureUrlAsync(string dishName);
+	}
+
+	public class UnsplashHandler : IUnsplashHandler
 	{
 		public async Task<string> GeneratePictureUrlAsync(string dishName)
 		{

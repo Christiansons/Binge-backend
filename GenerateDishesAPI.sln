@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateDishesAPI", "GenerateDishesAPI.csproj", "{D8C5803C-CB25-4BF5-BA44-B541D2CF8E2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerateDishesAPI", "GenerateDishesAPI.csproj", "{D8C5803C-CB25-4BF5-BA44-B541D2CF8E2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenerateDishesAPITests", "..\GenerateDishesAPITests\GenerateDishesAPITests.csproj", "{B359E365-CF93-4115-9923-C1C81D619C47}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{D8C5803C-CB25-4BF5-BA44-B541D2CF8E2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8C5803C-CB25-4BF5-BA44-B541D2CF8E2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8C5803C-CB25-4BF5-BA44-B541D2CF8E2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B359E365-CF93-4115-9923-C1C81D619C47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B359E365-CF93-4115-9923-C1C81D619C47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B359E365-CF93-4115-9923-C1C81D619C47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B359E365-CF93-4115-9923-C1C81D619C47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

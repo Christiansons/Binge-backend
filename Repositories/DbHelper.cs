@@ -9,11 +9,28 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace GenerateDishesAPI.Repositories
 {
-    public class DbHelpers
+	public interface IDbHelper
+	{
+		IResult SaveDishAndUrl(string dishName, string url, string id);
+		int? CheckNumOfPeopleForRecipe(string userId, string dishName);
+		CompleteDishDTO GetCompleteDishFromDb(string userId, string dishName);
+		IResult SaveIngredientsAndRecipe(string userId, string dishName, string[] ingredients, string recipe, int numOfPeople);
+		bool CheckIfRecipeAdded(string dishName, string userId);
+		IResult DeleteDishFromDb(string dishName, string userId);
+		IResult DeleteRecipeFromDb(string dishName, string userId);
+		AllDishesConnectedToUserViewModel GetAllDishesConnectedToUser(string userId);
+		IResult AddAllergiesAndDietToUser(string userId, string[]? allergies, string? diet);
+		AllergyAndDietViewModel GetAllAllergiesAndDietsConnectedToUser(string userId);
+		UserViewModel GetUserInfo(string userId);
+		string GetUserDiet(string userId);
+		string[]? GetUserAllergies(string userId);
+	}
+
+	public class DbHelper : IDbHelper
     {
         private readonly ApplicationContext _context;
 
-		public DbHelpers(ApplicationContext context)
+		public DbHelper(ApplicationContext context)
 		{
 			_context = context;
 		}
@@ -71,21 +88,43 @@ namespace GenerateDishesAPI.Repositories
 
 		public CompleteDishDTO GetCompleteDishFromDb(string userId, string dishName)
 		{
-			Dish? dish = _context.Dishes
-				.Where(d => d.DishName == dishName)
-				.Where(d => d.ApplicationUserId == userId)
-				.Include(d => d.ingredients)
-				.Include(d => d.Recipe)
-				.FirstOrDefault();
-
-			CompleteDishDTO dishDTO = new CompleteDishDTO
+			try
 			{
-				dishName = dish.DishName,
-				ingredients = dish.ingredients.Select(i => i.IngredientName).ToList(),
-				recipe = dish.Recipe.Instructions
-			};
+				Dish? dish = _context.Dishes
+					.Where(d => d.DishName == dishName)
+					.Where(d => d.ApplicationUserId == userId)
+					.Include(d => d.ingredients)
+					.Include(d => d.Recipe)
+					.FirstOrDefault();
 
-			return dishDTO;
+				if (dish == null)
+				{
+					// Dish not found
+					throw new Exception("Dish not found.");
+				}
+
+				if (dish.ingredients == null || dish.Recipe == null)
+				{
+					// Incomplete data
+					throw new Exception("Incomplete dish data.");
+				}
+
+				CompleteDishDTO dishDTO = new CompleteDishDTO
+				{
+					dishName = dish.DishName,
+					ingredients = dish.ingredients.Select(i => i.IngredientName).ToList(),
+					recipe = dish.Recipe.Instructions
+				};
+
+				return dishDTO;
+			}
+			catch (Exception ex)
+			{
+				// Handle exceptions
+				// You can log the error here or perform other error handling actions
+				Console.WriteLine($"Error: {ex.Message}");
+				return null; // or throw an appropriate exception, or return a default DTO
+			}
 		}
 
 		public IResult SaveIngredientsAndRecipe(string userId, string dishName, string[] ingredients, string recipe, int numOfPeople)
@@ -358,17 +397,18 @@ namespace GenerateDishesAPI.Repositories
 				
 		}
 
-		public string GetUserDiet (string userId)
+		public string GetUserDiet(string userId)
 		{
 			ApplicationUser? user = _context.Users
 				.Where(u => u.Id == userId)
 				.Include(u => u.Diet)
 				.FirstOrDefault();
 
-			if (user.Diet == null)
+			if (user == null || user.Diet == null)
 			{
 				return "no";
 			}
+
 			return user.Diet.DietName;
 		}
 
