@@ -23,9 +23,9 @@ namespace GenerateDishesAPI
 		private readonly HttpClient _httpClient;
 		private readonly IDbHelper _dbHelpers;
 		private readonly string _url = "https://azurefoodapi.azurewebsites.net";
-		public ApiClient(IDbHelper dbHelpers)
+		public ApiClient(IDbHelper dbHelpers, HttpClient httpClient)
 		{
-			_httpClient = new HttpClient();
+			_httpClient = httpClient;
 			_dbHelpers = dbHelpers;
 		}
 
